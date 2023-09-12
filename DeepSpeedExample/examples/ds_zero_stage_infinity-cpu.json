@@ -1,4 +1,5 @@
 {
+  "zero_force_ds_cpu_optimizer": false,
   "train_micro_batch_size_per_gpu": 4,
   "gradient_accumulation_steps": 1,
   "steps_per_print": 10,
@@ -6,7 +7,7 @@
     "stage": 3,
     "stage3_max_live_parameters": 1e9,
     "stage3_max_reuse_distance": 1e9,
-    "stage3_param_persitence_threshold": 1e5,
+    "param_persistence_threshold": 1e5,
     "stage3_prefetch_bucket_size": 5e7,
     "contiguous_gradients": true,
     "overlap_comm": true,

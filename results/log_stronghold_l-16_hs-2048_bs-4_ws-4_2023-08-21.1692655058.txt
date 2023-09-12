@@ -1,0 +1,17 @@
+cp: cannot create regular file '/usr/local/lib/python3.8/dist-packages/torch/distributed/distributed_c10d.py': No such file or directory
+cp: cannot create regular file '/usr/local/lib/python3.8/dist-packages/deepspeed/ops/adam/cpu_adam.py': No such file or directory
+PYTHONGIL=1 python pretrain_gpt.py --num-layers 16 --hidden-size 2048 --num-attention-heads 16 --seq-length 1024 --micro-batch-size 4 --global-batch-size 4 --max-position-embeddings 1024 --train-iters 50 --log-interval 10 --exit-interval 50 --lr-decay-iters 320000 --save ./checkpoints/gpt2 --load ./checkpoints/gpt2 --data-path /home/sys/STRONGHOLD/data/my-gpt2-en_text_document --vocab-file /home/sys/STRONGHOLD/data/gpt2-vocab.json --merge-file /home/sys/STRONGHOLD/data/gpt2-merges.txt --data-impl mmap --distributed-backend nccl --split 949,50,1 --lr 0.00015 --min-lr 0.00001 --lr-decay-style cosine --lr-warmup-fraction .01 --weight-decay 1e-2 --clip-grad 1.0 --log-interval 10 --save-interval 10000 --eval-interval 1000 --eval-iters 1000 --checkpoint-activations --activations-checkpoint-method 'uniform' --activations-checkpoint-num-layers 1 --enable-gl --use-cpu-initialization --gl-world-size 1 --gl-window-size 4 --gl-ray-max-concurrency 12
+Traceback (most recent call last):
+  File "/shared_ssd_storage/shilonglei/OOC/sc22-ae/SHv0/pretrain_gpt.py", line 30, in <module>
+    from megatron.data.gpt_dataset import build_train_valid_test_datasets
+  File "/shared_ssd_storage/shilonglei/OOC/sc22-ae/SHv0/megatron/data/__init__.py", line 1, in <module>
+    from . import indexed_dataset
+  File "/shared_ssd_storage/shilonglei/OOC/sc22-ae/SHv0/megatron/data/indexed_dataset.py", line 98, in <module>
+    6: np.float,
+       ^^^^^^^^
+  File "/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/numpy/__init__.py", line 313, in __getattr__
+    raise AttributeError(__former_attrs__[attr])
+AttributeError: module 'numpy' has no attribute 'float'.
+`np.float` was a deprecated alias for the builtin `float`. To avoid this error in existing code, use `float` by itself. Doing this will not modify any behavior and is safe. If you specifically wanted the numpy scalar type, use `np.float64` here.
+The aliases was originally deprecated in NumPy 1.20; for more details and guidance see the original release note at:
+    https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations. Did you mean: 'cfloat'?

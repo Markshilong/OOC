@@ -75,4 +75,4 @@ CMD="cd ${_SRC_DIR}/.. && \
     cd -"
 
 echo $CMD
-eval $CMD
+# eval $CMD

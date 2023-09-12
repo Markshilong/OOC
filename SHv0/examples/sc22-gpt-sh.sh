@@ -23,11 +23,15 @@ GPUS_PER_NODE=1
 export CUDA_VISIBLE_DEVICES=`seq -s ',' 0 1 $(( $GPUS_PER_NODE-1 ))`
 
 # Data
-_BASE=/home/sys/STRONGHOLD/data
-DATA_PATH=${_BASE}/my-gpt2-en_text_document
-VOCAB_PATH=${_BASE}/gpt2-vocab.json
-MERGE_PATH=${_BASE}/gpt2-merges.txt
+# _BASE=/home/sys/STRONGHOLD/data
+# DATA_PATH=${_BASE}/my-gpt2-en_text_document
+# VOCAB_PATH=${_BASE}/gpt2-vocab.json
+# MERGE_PATH=${_BASE}/gpt2-merges.txt
 CHECKPOINT_PATH=./checkpoints/gpt2
+
+VOCAB_PATH=/shared_ssd_storage/shilonglei/OOC/Megatron-DeepSpeed/dataset/data/gpt2-vocab.json
+MERGE_PATH=/shared_ssd_storage/shilonglei/OOC/Megatron-DeepSpeed/dataset/data/gpt2-merges.txt
+DATA_PATH=/shared_ssd_storage/shilonglei/OOC/Megatron-DeepSpeed/dataset/data/meg-gpt2-oscar-en-10k_text_document
 
 # Todo. Hard code. @gl
 PYTHON_LIB=/usr/local/lib/python3.8/dist-packages

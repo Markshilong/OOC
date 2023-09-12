@@ -13,11 +13,17 @@ WORLD_SIZE=$(($GPUS_PER_NODE*$NNODES))
 export DLWS_NUM_WORKER=${NNODES}
 export DLWS_NUM_GPU_PER_WORKER=${GPUS_PER_NODE}
 
-_BASE=/home/sys/STRONGHOLD/data
-DATA_PATH=${_BASE}/my-gpt2-en_text_document
-VOCAB_PATH=${_BASE}/gpt2-vocab.json
-MERGE_PATH=${_BASE}/gpt2-merges.txt
-CHECKPOINT_PATH=checkpoints/gpt2_ds
+# Data
+# _BASE=/home/sys/STRONGHOLD/data
+# DATA_PATH=${_BASE}/my-gpt2-en_text_document
+# VOCAB_PATH=${_BASE}/gpt2-vocab.json
+# MERGE_PATH=${_BASE}/gpt2-merges.txt
+CHECKPOINT_PATH=./checkpoints/gpt2
+
+VOCAB_PATH=/shared_ssd_storage/shilonglei/OOC/Megatron-DeepSpeed/dataset/data/gpt2-vocab.json
+MERGE_PATH=/shared_ssd_storage/shilonglei/OOC/Megatron-DeepSpeed/dataset/data/gpt2-merges.txt
+DATA_PATH=/shared_ssd_storage/shilonglei/OOC/Megatron-DeepSpeed/dataset/data/meg-gpt2-oscar-en-10k_text_document
+
 
 script_path=$(realpath $0)
 script_dir=$(dirname $script_path)

@@ -1,0 +1,166 @@
+deepspeed --num_nodes 1 --num_gpus 1 pretrain_gpt2.py --model-parallel-size 1 --num-layers 32 --hidden-size 2048 --num-attention-heads 16 --seq-length 1024 --max-position-embeddings 1024 --batch-size 4 --train-iters 50 --log-interval 10 --exit-interval 50 --lr-decay-iters 320000 --save checkpoints/gpt2_ds --load checkpoints/gpt2_ds --data-path /home/sys/STRONGHOLD/data/my-gpt2-en_text_document --vocab-file /home/sys/STRONGHOLD/data/gpt2-vocab.json --merge-file /home/sys/STRONGHOLD/data/gpt2-merges.txt --data-impl mmap --split 949,50,1 --distributed-backend nccl --lr 1.5e-4 --lr-decay-style cosine --min-lr 1.0e-5 --weight-decay 1e-2 --clip-grad 1.0 --warmup 0.01 --checkpoint-activations --save-interval 10000 --eval-interval 1000 --eval-iters 1000 --deepspeed --deepspeed_config /shared_ssd_storage/shilonglei/OOC/sc22-ae/DeepSpeedExample/examples/ds_zero_stage_2_config.json --zero-stage 2 --zero-reduce-bucket-size 50000000 --zero-allgather-bucket-size 5000000000 --zero-contigious-gradients --zero-reduce-scatter --checkpoint-activations --checkpoint-num-layers 1 --partition-activations --synchronize-each-layer --contigious-checkpointing
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/bin/deepspeed:4: DeprecationWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html
+  __import__('pkg_resources').require('deepspeed==0.10.1+42370242')
+[2023-08-28 15:30:04,140] [INFO] [real_accelerator.py:158:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2023-08-28 15:30:05,608] [WARNING] [runner.py:201:fetch_hostfile] Unable to find hostfile, will proceed with training with local resources only.
+[2023-08-28 15:30:05,636] [INFO] [runner.py:567:main] cmd = /shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/bin/python -u -m deepspeed.launcher.launch --world_info=eyJsb2NhbGhvc3QiOiBbMF19 --master_addr=127.0.0.1 --master_port=29500 --enable_each_rank_log=None pretrain_gpt2.py --model-parallel-size 1 --num-layers 32 --hidden-size 2048 --num-attention-heads 16 --seq-length 1024 --max-position-embeddings 1024 --batch-size 4 --train-iters 50 --log-interval 10 --exit-interval 50 --lr-decay-iters 320000 --save checkpoints/gpt2_ds --load checkpoints/gpt2_ds --data-path /home/sys/STRONGHOLD/data/my-gpt2-en_text_document --vocab-file /home/sys/STRONGHOLD/data/gpt2-vocab.json --merge-file /home/sys/STRONGHOLD/data/gpt2-merges.txt --data-impl mmap --split 949,50,1 --distributed-backend nccl --lr 1.5e-4 --lr-decay-style cosine --min-lr 1.0e-5 --weight-decay 1e-2 --clip-grad 1.0 --warmup 0.01 --checkpoint-activations --save-interval 10000 --eval-interval 1000 --eval-iters 1000 --deepspeed --deepspeed_config /shared_ssd_storage/shilonglei/OOC/sc22-ae/DeepSpeedExample/examples/ds_zero_stage_2_config.json --zero-stage 2 --zero-reduce-bucket-size 50000000 --zero-allgather-bucket-size 5000000000 --zero-contigious-gradients --zero-reduce-scatter --checkpoint-activations --checkpoint-num-layers 1 --partition-activations --synchronize-each-layer --contigious-checkpointing
+[2023-08-28 15:30:07,360] [INFO] [real_accelerator.py:158:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2023-08-28 15:30:08,517] [INFO] [launch.py:145:main] WORLD INFO DICT: {'localhost': [0]}
+[2023-08-28 15:30:08,517] [INFO] [launch.py:151:main] nnodes=1, num_local_procs=1, node_rank=0
+[2023-08-28 15:30:08,517] [INFO] [launch.py:162:main] global_rank_mapping=defaultdict(<class 'list'>, {'localhost': [0]})
+[2023-08-28 15:30:08,517] [INFO] [launch.py:163:main] dist_world_size=1
+[2023-08-28 15:30:08,517] [INFO] [launch.py:165:main] Setting CUDA_VISIBLE_DEVICES=0
+[2023-08-28 15:30:10,479] [INFO] [real_accelerator.py:158:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+using world size: 1 and model-parallel size: 1 
+using torch.float32 for parameters ...
+-------------------- arguments --------------------
+  adam_beta1 ...................... 0.9
+  adam_beta2 ...................... 0.999
+  adam_eps ........................ 1e-08
+  adlr_autoresume ................. False
+  adlr_autoresume_interval ........ 1000
+  apply_query_key_layer_scaling ... False
+  apply_residual_connection_post_layernorm  False
+  attention_dropout ............... 0.1
+  attention_softmax_in_fp32 ....... False
+  batch_size ...................... 4
+  bert_load ....................... None
+  bias_dropout_fusion ............. False
+  bias_gelu_fusion ................ False
+  block_data_path ................. None
+  checkpoint_activations .......... True
+  checkpoint_in_cpu ............... False
+  checkpoint_num_layers ........... 1
+  clip_grad ....................... 1.0
+  contigious_checkpointing ........ True
+  cpu_optimizer ................... False
+  cpu_torch_adam .................. False
+  data_impl ....................... mmap
+  data_path ....................... /home/sys/STRONGHOLD/data/my-gpt2-en_text_document
+  DDP_impl ........................ local
+  deepscale ....................... False
+  deepscale_config ................ None
+  deepspeed ....................... True
+  deepspeed_activation_checkpointing  False
+  deepspeed_config ................ /shared_ssd_storage/shilonglei/OOC/sc22-ae/DeepSpeedExample/examples/ds_zero_stage_2_config.json
+  deepspeed_mpi ................... False
+  distribute_checkpointed_activations  False
+  distributed_backend ............. nccl
+  dynamic_loss_scale .............. True
+  eod_mask_loss ................... False
+  eval_interval ................... 1000
+  eval_iters ...................... 1000
+  exit_interval ................... 50
+  faiss_use_gpu ................... False
+  finetune ........................ False
+  fp16 ............................ False
+  fp16_lm_cross_entropy ........... False
+  fp32_allreduce .................. False
+  hidden_dropout .................. 0.1
+  hidden_size ..................... 2048
+  hysteresis ...................... 2
+  ict_head_size ................... None
+  ict_load ........................ None
+  indexer_batch_size .............. 128
+  indexer_log_interval ............ 1000
+  init_method_std ................. 0.02
+  layernorm_epsilon ............... 1e-05
+  lazy_mpu_init ................... None
+  load ............................ checkpoints/gpt2_ds
+  local_rank ...................... 0
+  log_interval .................... 10
+  loss_scale ...................... None
+  loss_scale_window ............... 1000
+  lr .............................. 0.00015
+  lr_decay_iters .................. 320000
+  lr_decay_style .................. cosine
+  lr_decay_tokens ................. None
+  make_vocab_size_divisible_by .... 128
+  mask_prob ....................... 0.15
+  max_position_embeddings ......... 1024
+  memory_centric_tiled_linear ..... False
+  merge_file ...................... /home/sys/STRONGHOLD/data/gpt2-merges.txt
+  min_lr .......................... 1e-05
+  min_scale ....................... 1
+  mmap_warmup ..................... False
+  model_parallel_size ............. 1
+  no_load_optim ................... False
+  no_load_rng ..................... False
+  no_save_optim ................... False
+  no_save_rng ..................... False
+  num_attention_heads ............. 16
+  num_layers ...................... 32
+  num_unique_layers ............... None
+  num_workers ..................... 2
+  onnx_safe ....................... None
+  openai_gelu ..................... False
+  override_lr_scheduler ........... False
+  param_sharing_style ............. grouped
+  params_dtype .................... torch.float32
+  partition_activations ........... True
+  profile_backward ................ False
+  query_in_block_prob ............. 0.1
+  rank ............................ 0
+  remote_device ................... none
+  report_topk_accuracies .......... []
+  reset_attention_mask ............ False
+  reset_position_ids .............. False
+  save ............................ checkpoints/gpt2_ds
+  save_interval ................... 10000
+  scaled_masked_softmax_fusion .... False
+  scaled_upper_triang_masked_softmax_fusion  False
+  scattered_embeddings ............ False
+  seed ............................ 1234
+  seq_length ...................... 1024
+  short_seq_prob .................. 0.1
+  split ........................... 949,50,1
+  split_transformers .............. False
+  synchronize_each_layer .......... True
+  tensorboard_dir ................. None
+  tile_factor ..................... 1
+  titles_data_path ................ None
+  tokenizer_type .................. GPT2BPETokenizer
+  tokens .......................... 0
+  train_iters ..................... 50
+  train_tokens .................... None
+  use_checkpoint_lr_scheduler ..... False
+  use_cpu_initialization .......... False
+  use_one_sent_docs ............... False
+  use_pin_memory .................. False
+  vocab_file ...................... /home/sys/STRONGHOLD/data/gpt2-vocab.json
+  warmup .......................... 0.01
+  warmup_iters .................... None
+  weight_decay .................... 0.01
+  world_size ...................... 1
+  zero_allgather_bucket_size ...... 5000000000
+  zero_contigious_gradients ....... True
+  zero_reduce_bucket_size ......... 50000000
+  zero_reduce_scatter ............. True
+  zero_stage ...................... 2
+---------------- end of arguments ----------------
+> building GPT2BPETokenizer tokenizer ...
+Traceback (most recent call last):
+  File "/shared_ssd_storage/shilonglei/OOC/sc22-ae/DeepSpeedExample/pretrain_gpt2.py", line 133, in <module>
+    pretrain(train_valid_test_datasets_provider, model_provider, forward_step,
+  File "/shared_ssd_storage/shilonglei/OOC/sc22-ae/DeepSpeedExample/megatron/training.py", line 78, in pretrain
+    initialize_megatron(extra_args_provider=extra_args_provider,
+  File "/shared_ssd_storage/shilonglei/OOC/sc22-ae/DeepSpeedExample/megatron/initialize.py", line 51, in initialize_megatron
+    set_global_variables(extra_args_provider=extra_args_provider,
+  File "/shared_ssd_storage/shilonglei/OOC/sc22-ae/DeepSpeedExample/megatron/global_vars.py", line 70, in set_global_variables
+    _ = _build_tokenizer(args)
+        ^^^^^^^^^^^^^^^^^^^^^^
+  File "/shared_ssd_storage/shilonglei/OOC/sc22-ae/DeepSpeedExample/megatron/global_vars.py", line 91, in _build_tokenizer
+    _GLOBAL_TOKENIZER = build_tokenizer(args)
+                        ^^^^^^^^^^^^^^^^^^^^^
+  File "/shared_ssd_storage/shilonglei/OOC/sc22-ae/DeepSpeedExample/megatron/tokenizer/tokenizer.py", line 41, in build_tokenizer
+    tokenizer = _GPT2BPETokenizer(args.vocab_file, args.merge_file)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/shared_ssd_storage/shilonglei/OOC/sc22-ae/DeepSpeedExample/megatron/tokenizer/tokenizer.py", line 196, in __init__
+    self.tokenizer = GPT2Tokenizer(vocab_file, merge_file, errors='replace',
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/shared_ssd_storage/shilonglei/OOC/sc22-ae/DeepSpeedExample/megatron/tokenizer/gpt2_tokenization.py", line 159, in __init__
+    self.encoder = json.load(open(vocab_file))
+                             ^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/sys/STRONGHOLD/data/gpt2-vocab.json'
+[2023-08-28 15:30:12,518] [INFO] [launch.py:315:sigkill_handler] Killing subprocess 1563574
+[2023-08-28 15:30:12,519] [ERROR] [launch.py:321:sigkill_handler] ['/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/bin/python', '-u', 'pretrain_gpt2.py', '--local_rank=0', '--model-parallel-size', '1', '--num-layers', '32', '--hidden-size', '2048', '--num-attention-heads', '16', '--seq-length', '1024', '--max-position-embeddings', '1024', '--batch-size', '4', '--train-iters', '50', '--log-interval', '10', '--exit-interval', '50', '--lr-decay-iters', '320000', '--save', 'checkpoints/gpt2_ds', '--load', 'checkpoints/gpt2_ds', '--data-path', '/home/sys/STRONGHOLD/data/my-gpt2-en_text_document', '--vocab-file', '/home/sys/STRONGHOLD/data/gpt2-vocab.json', '--merge-file', '/home/sys/STRONGHOLD/data/gpt2-merges.txt', '--data-impl', 'mmap', '--split', '949,50,1', '--distributed-backend', 'nccl', '--lr', '1.5e-4', '--lr-decay-style', 'cosine', '--min-lr', '1.0e-5', '--weight-decay', '1e-2', '--clip-grad', '1.0', '--warmup', '0.01', '--checkpoint-activations', '--save-interval', '10000', '--eval-interval', '1000', '--eval-iters', '1000', '--deepspeed', '--deepspeed_config', '/shared_ssd_storage/shilonglei/OOC/sc22-ae/DeepSpeedExample/examples/ds_zero_stage_2_config.json', '--zero-stage', '2', '--zero-reduce-bucket-size', '50000000', '--zero-allgather-bucket-size', '5000000000', '--zero-contigious-gradients', '--zero-reduce-scatter', '--checkpoint-activations', '--checkpoint-num-layers', '1', '--partition-activations', '--synchronize-each-layer', '--contigious-checkpointing'] exits with return code = 1
