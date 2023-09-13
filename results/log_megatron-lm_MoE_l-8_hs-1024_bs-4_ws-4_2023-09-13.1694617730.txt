@@ -1,0 +1,321 @@
+using world size: 1, data-parallel-size: 1, tensor-model-parallel size: 1, pipeline-model-parallel size: 1 
+using torch.float32 for parameters ...
+------------------------ arguments ------------------------
+  accumulate_allreduce_grads_in_fp32 .............. False
+  activations_checkpoint_method ................... uniform
+  activations_checkpoint_num_layers ............... 1
+  adam_beta1 ...................................... 0.9
+  adam_beta2 ...................................... 0.999
+  adam_eps ........................................ 1e-08
+  adlr_autoresume ................................. False
+  adlr_autoresume_interval ........................ 1000
+  apply_query_key_layer_scaling ................... True
+  apply_residual_connection_post_layernorm ........ False
+  attention_dropout ............................... 0.1
+  attention_softmax_in_fp32 ....................... False
+  bert_binary_head ................................ True
+  bert_load ....................................... None
+  bf16 ............................................ False
+  bias_dropout_fusion ............................. True
+  bias_gelu_fusion ................................ True
+  biencoder_projection_dim ........................ 0
+  biencoder_shared_query_context_model ............ False
+  block_data_path ................................. None
+  clip_grad ....................................... 1.0
+  consumed_train_samples .......................... 0
+  consumed_valid_samples .......................... 0
+  data_impl ....................................... mmap
+  data_parallel_size .............................. 1
+  data_path ....................................... ['/shared_ssd_storage/shilonglei/OOC/Megatron-DeepSpeed/dataset/data/meg-gpt2-oscar-en-10k_text_document']
+  dataloader_type ................................. single
+  DDP_impl ........................................ local
+  decoder_seq_length .............................. None
+  distribute_checkpointed_activations ............. False
+  distributed_backend ............................. nccl
+  embedding_path .................................. None
+  empty_unused_memory_level ....................... 0
+  encoder_seq_length .............................. 1024
+  eod_mask_loss ................................... False
+  eval_interval ................................... 1000
+  eval_iters ...................................... 1000
+  evidence_data_path .............................. None
+  exit_duration_in_mins ........................... None
+  exit_interval ................................... 50
+  ffn_hidden_size ................................. 4096
+  finetune ........................................ False
+  fp16 ............................................ False
+  fp16_lm_cross_entropy ........................... False
+  fp32_residual_connection ........................ False
+  global_batch_size ............................... 4
+  hidden_dropout .................................. 0.1
+  hidden_size ..................................... 1024
+  hysteresis ...................................... 2
+  ict_head_size ................................... None
+  ict_load ........................................ None
+  img_dim ......................................... 224
+  indexer_batch_size .............................. 128
+  indexer_log_interval ............................ 1000
+  init_method_std ................................. 0.02
+  init_method_xavier_uniform ...................... False
+  initial_loss_scale .............................. 4294967296
+  kv_channels ..................................... 64
+  layernorm_epsilon ............................... 1e-05
+  lazy_mpu_init ................................... None
+  load ............................................ checkpoints/gpt2
+  local_rank ...................................... None
+  log_batch_size_to_tensorboard ................... False
+  log_interval .................................... 10
+  log_learning_rate_to_tensorboard ................ True
+  log_loss_scale_to_tensorboard ................... True
+  log_memory_to_tensorboard ....................... False
+  log_num_zeros_in_grad ........................... False
+  log_params_norm ................................. False
+  log_timers_to_tensorboard ....................... False
+  log_validation_ppl_to_tensorboard ............... False
+  loss_scale ...................................... None
+  loss_scale_window ............................... 1000
+  lr .............................................. 0.00015
+  lr_decay_iters .................................. 320000
+  lr_decay_samples ................................ None
+  lr_decay_style .................................. cosine
+  lr_warmup_fraction .............................. 0.01
+  lr_warmup_iters ................................. 0
+  lr_warmup_samples ............................... 0
+  make_vocab_size_divisible_by .................... 128
+  mask_prob ....................................... 0.15
+  masked_softmax_fusion ........................... True
+  max_position_embeddings ......................... 1024
+  merge_file ...................................... /shared_ssd_storage/shilonglei/OOC/Megatron-DeepSpeed/dataset/data/gpt2-merges.txt
+  micro_batch_size ................................ 4
+  min_loss_scale .................................. 1.0
+  min_lr .......................................... 1e-05
+  mmap_warmup ..................................... False
+  no_load_optim ................................... None
+  no_load_rng ..................................... None
+  no_save_optim ................................... None
+  no_save_rng ..................................... None
+  num_attention_heads ............................. 16
+  num_channels .................................... 3
+  num_classes ..................................... 1000
+  num_layers ...................................... 8
+  num_layers_per_virtual_pipeline_stage ........... None
+  num_workers ..................................... 2
+  onnx_safe ....................................... None
+  openai_gelu ..................................... False
+  optimizer ....................................... adam
+  override_lr_scheduler ........................... False
+  params_dtype .................................... torch.float32
+  patch_dim ....................................... 16
+  pipeline_model_parallel_size .................... 1
+  query_in_block_prob ............................. 0.1
+  rampup_batch_size ............................... None
+  rank ............................................ 0
+  reset_attention_mask ............................ False
+  reset_position_ids .............................. False
+  retriever_report_topk_accuracies ................ []
+  retriever_score_scaling ......................... False
+  retriever_seq_length ............................ 256
+  sample_rate ..................................... 1.0
+  save ............................................ checkpoints/gpt2
+  save_interval ................................... 10000
+  scatter_gather_tensors_in_pipeline .............. True
+  seed ............................................ 1234
+  seq_length ...................................... 1024
+  sgd_momentum .................................... 0.9
+  short_seq_prob .................................. 0.1
+  split ........................................... 949,50,1
+  tensor_model_parallel_size ...................... 1
+  tensorboard_dir ................................. None
+  tensorboard_log_interval ........................ 1
+  tensorboard_queue_size .......................... 1000
+  titles_data_path ................................ None
+  tokenizer_type .................................. GPT2BPETokenizer
+  train_iters ..................................... 50
+  train_samples ................................... None
+  use_checkpoint_lr_scheduler ..................... False
+  use_contiguous_buffers_in_local_ddp ............. True
+  use_cpu_initialization .......................... None
+  use_one_sent_docs ............................... False
+  virtual_pipeline_model_parallel_size ............ None
+  vocab_extra_ids ................................. 0
+  vocab_file ...................................... /shared_ssd_storage/shilonglei/OOC/Megatron-DeepSpeed/dataset/data/gpt2-vocab.json
+  weight_decay .................................... 0.01
+  world_size ...................................... 1
+-------------------- end of arguments ---------------------
+setting number of micro-batches to constant 1
+> building GPT2BPETokenizer tokenizer ...
+ > padded vocab (size: 50257) with 47 dummy tokens (new size: 50304)
+> initializing torch distributed ...
+> initializing tensor model parallel with size 1
+> initializing pipeline model parallel with size 1
+> setting random seeds to 1234 ...
+> initializing model parallel cuda seeds on global rank 0, model parallel rank 0, and data parallel rank 0 with model parallel seed: 3952 and data parallel seed: 1234
+make: Entering directory '/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM_MoE/megatron/data'
+make: Nothing to be done for 'default'.
+make: Leaving directory '/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM_MoE/megatron/data'
+> compiling dataset index builder ...
+>>> done with dataset index builder. Compilation time: 0.019 seconds
+WARNING: constraints for invoking optimized fused softmax kernel are not met. We default back to unfused kernel invocations.
+> compiling and loading fused kernels ...
+Detected CUDA files, patching ldflags
+Emitting ninja build file /shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM_MoE/megatron/fused_kernels/build/build.ninja...
+Building extension module scaled_upper_triang_masked_softmax_cuda...
+Allowing ninja to set a default number of workers... (overridable by setting the environment variable MAX_JOBS=N)
+ninja: no work to do.
+Loading extension module scaled_upper_triang_masked_softmax_cuda...
+Detected CUDA files, patching ldflags
+Emitting ninja build file /shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM_MoE/megatron/fused_kernels/build/build.ninja...
+Building extension module scaled_masked_softmax_cuda...
+Allowing ninja to set a default number of workers... (overridable by setting the environment variable MAX_JOBS=N)
+ninja: no work to do.
+Loading extension module scaled_masked_softmax_cuda...
+Detected CUDA files, patching ldflags
+Emitting ninja build file /shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM_MoE/megatron/fused_kernels/build/build.ninja...
+Building extension module fused_mix_prec_layer_norm_cuda...
+Allowing ninja to set a default number of workers... (overridable by setting the environment variable MAX_JOBS=N)
+ninja: no work to do.
+Loading extension module fused_mix_prec_layer_norm_cuda...
+>>> done with compiling and loading fused kernels. Compilation time: 1.128 seconds
+time to initialize megatron (seconds): 1.272
+[after megatron is initialized] datetime: 2023-09-13 11:08:53 
+building GPT model ...
+[2023-09-13 11:08:54,312] [INFO] [real_accelerator.py:158:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2023-09-13 11:08:55,840] [INFO] [logging.py:96:log_dist] [Rank -1] Creating MoE layer with num_experts: 16 | num_local_experts: 16 | expert_parallel_size: 1
+[2023-09-13 11:08:55,853] [INFO] [logging.py:96:log_dist] [Rank -1] Creating MoE layer with num_experts: 16 | num_local_experts: 16 | expert_parallel_size: 1
+[2023-09-13 11:08:55,865] [INFO] [logging.py:96:log_dist] [Rank -1] Creating MoE layer with num_experts: 16 | num_local_experts: 16 | expert_parallel_size: 1
+[2023-09-13 11:08:55,876] [INFO] [logging.py:96:log_dist] [Rank -1] Creating MoE layer with num_experts: 16 | num_local_experts: 16 | expert_parallel_size: 1
+[2023-09-13 11:08:55,887] [INFO] [logging.py:96:log_dist] [Rank -1] Creating MoE layer with num_experts: 16 | num_local_experts: 16 | expert_parallel_size: 1
+[2023-09-13 11:08:55,898] [INFO] [logging.py:96:log_dist] [Rank -1] Creating MoE layer with num_experts: 16 | num_local_experts: 16 | expert_parallel_size: 1
+[2023-09-13 11:08:55,910] [INFO] [logging.py:96:log_dist] [Rank -1] Creating MoE layer with num_experts: 16 | num_local_experts: 16 | expert_parallel_size: 1
+[2023-09-13 11:08:55,921] [INFO] [logging.py:96:log_dist] [Rank -1] Creating MoE layer with num_experts: 16 | num_local_experts: 16 | expert_parallel_size: 1
+[2023-09-13 11:08:55,931] [INFO] [comm.py:631:init_distributed] cdb=None
+ > number of parameters on (tensor, pipeline) model parallel rank (0, 0): 1160710144
+> learning rate decay style: cosine
+WARNING: could not find the metadata file checkpoints/gpt2/latest_checkpointed_iteration.txt 
+    will not load any checkpoints and will start from random
+time (ms) | load-checkpoint: 0.15
+[after model, optimizer, and learning rate scheduler are built] datetime: 2023-09-13 11:08:55 
+> building train, validation, and test datasets ...
+ > datasets target sizes (minimum size):
+    train:      200
+    validation: 4000
+    test:       4000
+> building train, validation, and test datasets for GPT ...
+ > building dataset index ...
+    reading sizes...
+    reading pointers...
+    reading document index...
+    creating numpy buffer of mmap...
+    creating memory view of numpy buffer...
+ > finished creating indexed dataset in 0.002161 seconds
+    number of documents: 10000
+ > dataset split:
+    train:
+     document indices in [0, 9490) total of 9490 documents
+    validation:
+     document indices in [9490, 9990) total of 500 documents
+    test:
+     document indices in [9990, 10000) total of 10 documents
+ > loading doc-idx mapping from /shared_ssd_storage/shilonglei/OOC/Megatron-DeepSpeed/dataset/data/meg-gpt2-oscar-en-10k_text_document_train_indexmap_200ns_1024sl_1234s_doc_idx.npy
+ > loading sample-idx mapping from /shared_ssd_storage/shilonglei/OOC/Megatron-DeepSpeed/dataset/data/meg-gpt2-oscar-en-10k_text_document_train_indexmap_200ns_1024sl_1234s_sample_idx.npy
+ > loading shuffle-idx mapping from /shared_ssd_storage/shilonglei/OOC/Megatron-DeepSpeed/dataset/data/meg-gpt2-oscar-en-10k_text_document_train_indexmap_200ns_1024sl_1234s_shuffle_idx.npy
+    loaded indexed file in 0.002 seconds
+    total number of samples: 27538
+    total number of epochs: 1
+ > loading doc-idx mapping from /shared_ssd_storage/shilonglei/OOC/Megatron-DeepSpeed/dataset/data/meg-gpt2-oscar-en-10k_text_document_valid_indexmap_4000ns_1024sl_1234s_doc_idx.npy
+ > loading sample-idx mapping from /shared_ssd_storage/shilonglei/OOC/Megatron-DeepSpeed/dataset/data/meg-gpt2-oscar-en-10k_text_document_valid_indexmap_4000ns_1024sl_1234s_sample_idx.npy
+ > loading shuffle-idx mapping from /shared_ssd_storage/shilonglei/OOC/Megatron-DeepSpeed/dataset/data/meg-gpt2-oscar-en-10k_text_document_valid_indexmap_4000ns_1024sl_1234s_shuffle_idx.npy
+    loaded indexed file in 0.001 seconds
+    total number of samples: 4637
+    total number of epochs: 3
+ > loading doc-idx mapping from /shared_ssd_storage/shilonglei/OOC/Megatron-DeepSpeed/dataset/data/meg-gpt2-oscar-en-10k_text_document_test_indexmap_4000ns_1024sl_1234s_doc_idx.npy
+ > loading sample-idx mapping from /shared_ssd_storage/shilonglei/OOC/Megatron-DeepSpeed/dataset/data/meg-gpt2-oscar-en-10k_text_document_test_indexmap_4000ns_1024sl_1234s_sample_idx.npy
+ > loading shuffle-idx mapping from /shared_ssd_storage/shilonglei/OOC/Megatron-DeepSpeed/dataset/data/meg-gpt2-oscar-en-10k_text_document_test_indexmap_4000ns_1024sl_1234s_shuffle_idx.npy
+    loaded indexed file in 0.001 seconds
+    total number of samples: 4005
+    total number of epochs: 126
+> finished creating GPT datasets ...
+[after dataloaders are built] datetime: 2023-09-13 11:08:56 
+done with setup ...
+time (ms) | model-and-optimizer-setup: 2118.60 | train/valid/test-data-iterators-setup: 285.69
+training ...
+[before the start of training step] datetime: 2023-09-13 11:08:56 
+### layer_number = 1 finished forwarding
+Traceback (most recent call last):
+  File "/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM_MoE/pretrain_gpt.py", line 131, in <module>
+    pretrain(train_valid_test_datasets_provider, model_provider, forward_step,
+  File "/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM_MoE/megatron/training.py", line 145, in pretrain
+    iteration = train(forward_step_func,
+                ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM_MoE/megatron/training.py", line 640, in train
+    train_step(forward_step_func,
+  File "/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM_MoE/megatron/training.py", line 364, in train_step
+    losses_reduced = forward_backward_func(
+                     ^^^^^^^^^^^^^^^^^^^^^^
+  File "/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM_MoE/megatron/schedules.py", line 133, in forward_backward_no_pipelining
+    output_tensor = forward_step(forward_step_func, data_iterator, model,
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM_MoE/megatron/schedules.py", line 57, in forward_step
+    output_tensor, loss_func = forward_step_func(data_iterator, model)
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM_MoE/pretrain_gpt.py", line 104, in forward_step
+    output_tensor = model(tokens, position_ids, attention_mask,
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM_MoE/megatron/model/distributed.py", line 71, in forward
+    return self.module(*inputs, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM_MoE/megatron/model/gpt_model.py", line 96, in forward
+    lm_output = self.language_model(
+                ^^^^^^^^^^^^^^^^^^^^
+  File "/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM_MoE/megatron/model/language_model.py", line 351, in forward
+    encoder_output = self.encoder(encoder_input,
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM_MoE/megatron/model/transformer.py", line 808, in forward
+    hidden_states = self._checkpointed_forward(hidden_states,
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM_MoE/megatron/model/transformer.py", line 746, in _checkpointed_forward
+    hidden_states = mpu.checkpoint(
+                    ^^^^^^^^^^^^^^^
+  File "/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM_MoE/megatron/mpu/random.py", line 295, in checkpoint
+    return CheckpointFunction.apply(function,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/autograd/function.py", line 506, in apply
+    return super().apply(*args, **kwargs)  # type: ignore[misc]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM_MoE/megatron/mpu/random.py", line 240, in forward
+    outputs = run_function(*args)
+              ^^^^^^^^^^^^^^^^^^^
+  File "/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM_MoE/megatron/model/transformer.py", line 719, in custom_forward
+    x_ = layer(x_, attention_mask, encoder_output, enc_dec_attn_mask)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM_MoE/megatron/model/transformer.py", line 547, in forward
+    layernorm_output = self.input_layernorm(hidden_states)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM_MoE/megatron/model/fused_layer_norm.py", line 88, in forward
+    return FusedLayerNormAffineFunction.apply(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/autograd/function.py", line 506, in apply
+    return super().apply(*args, **kwargs)  # type: ignore[misc]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM_MoE/megatron/model/fused_layer_norm.py", line 37, in forward
+    input_ = input.contiguous()
+             ^^^^^^^^^^^^^^^^
+AttributeError: 'tuple' object has no attribute 'contiguous'

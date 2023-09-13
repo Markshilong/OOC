@@ -1,0 +1,859 @@
+using world size: 1, data-parallel-size: 1, tensor-model-parallel size: 1, pipeline-model-parallel size: 1 
+using torch.float32 for parameters ...
+------------------------ arguments ------------------------
+  accumulate_allreduce_grads_in_fp32 .............. False
+  activations_checkpoint_method ................... uniform
+  activations_checkpoint_num_layers ............... 1
+  adam_beta1 ...................................... 0.9
+  adam_beta2 ...................................... 0.999
+  adam_eps ........................................ 1e-08
+  adlr_autoresume ................................. False
+  adlr_autoresume_interval ........................ 1000
+  apply_query_key_layer_scaling ................... True
+  apply_residual_connection_post_layernorm ........ False
+  attention_dropout ............................... 0.1
+  attention_softmax_in_fp32 ....................... False
+  bert_binary_head ................................ True
+  bert_load ....................................... None
+  bf16 ............................................ False
+  bias_dropout_fusion ............................. True
+  bias_gelu_fusion ................................ True
+  biencoder_projection_dim ........................ 0
+  biencoder_shared_query_context_model ............ False
+  block_data_path ................................. None
+  clip_grad ....................................... 1.0
+  consumed_train_samples .......................... 0
+  consumed_valid_samples .......................... 0
+  data_impl ....................................... mmap
+  data_parallel_size .............................. 1
+  data_path ....................................... ['/shared_ssd_storage/shilonglei/OOC/Megatron-DeepSpeed/dataset/data/meg-gpt2-oscar-en-10k_text_document']
+  dataloader_type ................................. single
+  DDP_impl ........................................ local
+  decoder_seq_length .............................. None
+  distribute_checkpointed_activations ............. False
+  distributed_backend ............................. nccl
+  embedding_path .................................. None
+  empty_unused_memory_level ....................... 0
+  encoder_seq_length .............................. 1024
+  eod_mask_loss ................................... False
+  eval_interval ................................... 1000
+  eval_iters ...................................... 1000
+  evidence_data_path .............................. None
+  exit_duration_in_mins ........................... None
+  exit_interval ................................... 50
+  ffn_hidden_size ................................. 4096
+  finetune ........................................ False
+  fp16 ............................................ False
+  fp16_lm_cross_entropy ........................... False
+  fp32_residual_connection ........................ False
+  global_batch_size ............................... 4
+  hidden_dropout .................................. 0.1
+  hidden_size ..................................... 1024
+  hysteresis ...................................... 2
+  ict_head_size ................................... None
+  ict_load ........................................ None
+  img_dim ......................................... 224
+  indexer_batch_size .............................. 128
+  indexer_log_interval ............................ 1000
+  init_method_std ................................. 0.02
+  init_method_xavier_uniform ...................... False
+  initial_loss_scale .............................. 4294967296
+  kv_channels ..................................... 64
+  layernorm_epsilon ............................... 1e-05
+  lazy_mpu_init ................................... None
+  load ............................................ checkpoints/gpt2
+  local_rank ...................................... None
+  log_batch_size_to_tensorboard ................... False
+  log_interval .................................... 10
+  log_learning_rate_to_tensorboard ................ True
+  log_loss_scale_to_tensorboard ................... True
+  log_memory_to_tensorboard ....................... False
+  log_num_zeros_in_grad ........................... False
+  log_params_norm ................................. False
+  log_timers_to_tensorboard ....................... False
+  log_validation_ppl_to_tensorboard ............... False
+  loss_scale ...................................... None
+  loss_scale_window ............................... 1000
+  lr .............................................. 0.00015
+  lr_decay_iters .................................. 320000
+  lr_decay_samples ................................ None
+  lr_decay_style .................................. cosine
+  lr_warmup_fraction .............................. 0.01
+  lr_warmup_iters ................................. 0
+  lr_warmup_samples ............................... 0
+  make_vocab_size_divisible_by .................... 128
+  mask_prob ....................................... 0.15
+  masked_softmax_fusion ........................... True
+  max_position_embeddings ......................... 1024
+  merge_file ...................................... /shared_ssd_storage/shilonglei/OOC/Megatron-DeepSpeed/dataset/data/gpt2-merges.txt
+  micro_batch_size ................................ 4
+  min_loss_scale .................................. 1.0
+  min_lr .......................................... 1e-05
+  mmap_warmup ..................................... False
+  no_load_optim ................................... None
+  no_load_rng ..................................... None
+  no_save_optim ................................... None
+  no_save_rng ..................................... None
+  num_attention_heads ............................. 16
+  num_channels .................................... 3
+  num_classes ..................................... 1000
+  num_layers ...................................... 8
+  num_layers_per_virtual_pipeline_stage ........... None
+  num_workers ..................................... 2
+  onnx_safe ....................................... None
+  openai_gelu ..................................... False
+  optimizer ....................................... adam
+  override_lr_scheduler ........................... False
+  params_dtype .................................... torch.float32
+  patch_dim ....................................... 16
+  pipeline_model_parallel_size .................... 1
+  query_in_block_prob ............................. 0.1
+  rampup_batch_size ............................... None
+  rank ............................................ 0
+  reset_attention_mask ............................ False
+  reset_position_ids .............................. False
+  retriever_report_topk_accuracies ................ []
+  retriever_score_scaling ......................... False
+  retriever_seq_length ............................ 256
+  sample_rate ..................................... 1.0
+  save ............................................ checkpoints/gpt2
+  save_interval ................................... 10000
+  scatter_gather_tensors_in_pipeline .............. True
+  seed ............................................ 1234
+  seq_length ...................................... 1024
+  sgd_momentum .................................... 0.9
+  short_seq_prob .................................. 0.1
+  split ........................................... 949,50,1
+  tensor_model_parallel_size ...................... 1
+  tensorboard_dir ................................. None
+  tensorboard_log_interval ........................ 1
+  tensorboard_queue_size .......................... 1000
+  titles_data_path ................................ None
+  tokenizer_type .................................. GPT2BPETokenizer
+  train_iters ..................................... 50
+  train_samples ................................... None
+  use_checkpoint_lr_scheduler ..................... False
+  use_contiguous_buffers_in_local_ddp ............. True
+  use_cpu_initialization .......................... None
+  use_one_sent_docs ............................... False
+  virtual_pipeline_model_parallel_size ............ None
+  vocab_extra_ids ................................. 0
+  vocab_file ...................................... /shared_ssd_storage/shilonglei/OOC/Megatron-DeepSpeed/dataset/data/gpt2-vocab.json
+  weight_decay .................................... 0.01
+  world_size ...................................... 1
+-------------------- end of arguments ---------------------
+setting number of micro-batches to constant 1
+> building GPT2BPETokenizer tokenizer ...
+ > padded vocab (size: 50257) with 47 dummy tokens (new size: 50304)
+> initializing torch distributed ...
+> initializing tensor model parallel with size 1
+> initializing pipeline model parallel with size 1
+> setting random seeds to 1234 ...
+> initializing model parallel cuda seeds on global rank 0, model parallel rank 0, and data parallel rank 0 with model parallel seed: 3952 and data parallel seed: 1234
+make: Entering directory '/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/data'
+g++ -O3 -Wall -shared -std=c++14 -fPIC -fdiagnostics-color -I/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/include/python3.11 -I/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/pybind11/include helpers.cpp -o helpers.cpython-311-x86_64-linux-gnu.so
+make: Leaving directory '/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/data'
+> compiling dataset index builder ...
+>>> done with dataset index builder. Compilation time: 5.097 seconds
+WARNING: constraints for invoking optimized fused softmax kernel are not met. We default back to unfused kernel invocations.
+> compiling and loading fused kernels ...
+Detected CUDA files, patching ldflags
+Emitting ninja build file /shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/build/build.ninja...
+Building extension module scaled_upper_triang_masked_softmax_cuda...
+Allowing ninja to set a default number of workers... (overridable by setting the environment variable MAX_JOBS=N)
+[1/3] c++ -MMD -MF scaled_upper_triang_masked_softmax.o.d -DTORCH_EXTENSION_NAME=scaled_upper_triang_masked_softmax_cuda -DTORCH_API_INCLUDE_EXTENSION_H -DPYBIND11_COMPILER_TYPE=\"_gcc\" -DPYBIND11_STDLIB=\"_libstdcpp\" -DPYBIND11_BUILD_ABI=\"_cxxabi1011\" -isystem /shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include -isystem /shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/torch/csrc/api/include -isystem /shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/TH -isystem /shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/THC -isystem /usr/local/cuda/include -isystem /shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/include/python3.11 -D_GLIBCXX_USE_CXX11_ABI=0 -fPIC -std=c++17 -O3 -c /shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/scaled_upper_triang_masked_softmax.cpp -o scaled_upper_triang_masked_softmax.o 
+[2/3] /usr/local/cuda/bin/nvcc  -DTORCH_EXTENSION_NAME=scaled_upper_triang_masked_softmax_cuda -DTORCH_API_INCLUDE_EXTENSION_H -DPYBIND11_COMPILER_TYPE=\"_gcc\" -DPYBIND11_STDLIB=\"_libstdcpp\" -DPYBIND11_BUILD_ABI=\"_cxxabi1011\" -isystem /shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include -isystem /shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/torch/csrc/api/include -isystem /shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/TH -isystem /shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/THC -isystem /usr/local/cuda/include -isystem /shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/include/python3.11 -D_GLIBCXX_USE_CXX11_ABI=0 -D__CUDA_NO_HALF_OPERATORS__ -D__CUDA_NO_HALF_CONVERSIONS__ -D__CUDA_NO_BFLOAT16_CONVERSIONS__ -D__CUDA_NO_HALF2_OPERATORS__ --expt-relaxed-constexpr -gencode=arch=compute_86,code=compute_86 -gencode=arch=compute_86,code=sm_86 --compiler-options '-fPIC' -O3 -gencode arch=compute_70,code=sm_70 --use_fast_math -U__CUDA_NO_HALF_OPERATORS__ -U__CUDA_NO_HALF_CONVERSIONS__ --expt-relaxed-constexpr --expt-extended-lambda -gencode arch=compute_80,code=sm_80 -std=c++17 -c /shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/scaled_upper_triang_masked_softmax_cuda.cu -o scaled_upper_triang_masked_softmax_cuda.cuda.o 
+[3/3] c++ scaled_upper_triang_masked_softmax.o scaled_upper_triang_masked_softmax_cuda.cuda.o -shared -L/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/lib -lc10 -lc10_cuda -ltorch_cpu -ltorch_cuda -ltorch -ltorch_python -L/usr/local/cuda/lib64 -lcudart -o scaled_upper_triang_masked_softmax_cuda.so
+Loading extension module scaled_upper_triang_masked_softmax_cuda...
+Detected CUDA files, patching ldflags
+Emitting ninja build file /shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/build/build.ninja...
+Building extension module scaled_masked_softmax_cuda...
+Allowing ninja to set a default number of workers... (overridable by setting the environment variable MAX_JOBS=N)
+[1/3] c++ -MMD -MF scaled_masked_softmax.o.d -DTORCH_EXTENSION_NAME=scaled_masked_softmax_cuda -DTORCH_API_INCLUDE_EXTENSION_H -DPYBIND11_COMPILER_TYPE=\"_gcc\" -DPYBIND11_STDLIB=\"_libstdcpp\" -DPYBIND11_BUILD_ABI=\"_cxxabi1011\" -isystem /shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include -isystem /shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/torch/csrc/api/include -isystem /shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/TH -isystem /shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/THC -isystem /usr/local/cuda/include -isystem /shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/include/python3.11 -D_GLIBCXX_USE_CXX11_ABI=0 -fPIC -std=c++17 -O3 -c /shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/scaled_masked_softmax.cpp -o scaled_masked_softmax.o 
+[2/3] /usr/local/cuda/bin/nvcc  -DTORCH_EXTENSION_NAME=scaled_masked_softmax_cuda -DTORCH_API_INCLUDE_EXTENSION_H -DPYBIND11_COMPILER_TYPE=\"_gcc\" -DPYBIND11_STDLIB=\"_libstdcpp\" -DPYBIND11_BUILD_ABI=\"_cxxabi1011\" -isystem /shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include -isystem /shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/torch/csrc/api/include -isystem /shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/TH -isystem /shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/THC -isystem /usr/local/cuda/include -isystem /shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/include/python3.11 -D_GLIBCXX_USE_CXX11_ABI=0 -D__CUDA_NO_HALF_OPERATORS__ -D__CUDA_NO_HALF_CONVERSIONS__ -D__CUDA_NO_BFLOAT16_CONVERSIONS__ -D__CUDA_NO_HALF2_OPERATORS__ --expt-relaxed-constexpr -gencode=arch=compute_86,code=compute_86 -gencode=arch=compute_86,code=sm_86 --compiler-options '-fPIC' -O3 -gencode arch=compute_70,code=sm_70 --use_fast_math -U__CUDA_NO_HALF_OPERATORS__ -U__CUDA_NO_HALF_CONVERSIONS__ --expt-relaxed-constexpr --expt-extended-lambda -gencode arch=compute_80,code=sm_80 -std=c++17 -c /shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/scaled_masked_softmax_cuda.cu -o scaled_masked_softmax_cuda.cuda.o 
+[3/3] c++ scaled_masked_softmax.o scaled_masked_softmax_cuda.cuda.o -shared -L/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/lib -lc10 -lc10_cuda -ltorch_cpu -ltorch_cuda -ltorch -ltorch_python -L/usr/local/cuda/lib64 -lcudart -o scaled_masked_softmax_cuda.so
+Loading extension module scaled_masked_softmax_cuda...
+Detected CUDA files, patching ldflags
+Emitting ninja build file /shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/build/build.ninja...
+Building extension module fused_mix_prec_layer_norm_cuda...
+Allowing ninja to set a default number of workers... (overridable by setting the environment variable MAX_JOBS=N)
+[1/3] c++ -MMD -MF layer_norm_cuda.o.d -DTORCH_EXTENSION_NAME=fused_mix_prec_layer_norm_cuda -DTORCH_API_INCLUDE_EXTENSION_H -DPYBIND11_COMPILER_TYPE=\"_gcc\" -DPYBIND11_STDLIB=\"_libstdcpp\" -DPYBIND11_BUILD_ABI=\"_cxxabi1011\" -isystem /shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include -isystem /shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/torch/csrc/api/include -isystem /shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/TH -isystem /shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/THC -isystem /usr/local/cuda/include -isystem /shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/include/python3.11 -D_GLIBCXX_USE_CXX11_ABI=0 -fPIC -std=c++17 -O3 -c /shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda.cpp -o layer_norm_cuda.o 
+[2/3] /usr/local/cuda/bin/nvcc  -DTORCH_EXTENSION_NAME=fused_mix_prec_layer_norm_cuda -DTORCH_API_INCLUDE_EXTENSION_H -DPYBIND11_COMPILER_TYPE=\"_gcc\" -DPYBIND11_STDLIB=\"_libstdcpp\" -DPYBIND11_BUILD_ABI=\"_cxxabi1011\" -isystem /shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include -isystem /shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/torch/csrc/api/include -isystem /shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/TH -isystem /shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/THC -isystem /usr/local/cuda/include -isystem /shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/include/python3.11 -D_GLIBCXX_USE_CXX11_ABI=0 -D__CUDA_NO_HALF_OPERATORS__ -D__CUDA_NO_HALF_CONVERSIONS__ -D__CUDA_NO_BFLOAT16_CONVERSIONS__ -D__CUDA_NO_HALF2_OPERATORS__ --expt-relaxed-constexpr -gencode=arch=compute_86,code=compute_86 -gencode=arch=compute_86,code=sm_86 --compiler-options '-fPIC' -O3 -gencode arch=compute_70,code=sm_70 --use_fast_math -maxrregcount=50 -gencode arch=compute_80,code=sm_80 -std=c++17 -c /shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu -o layer_norm_cuda_kernel.cuda.o 
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu: In function ‘void cuda_layer_norm(at::Tensor*, at::Tensor*, at::Tensor*, at::Tensor*, int, int, c10::IntList, at::Tensor*, at::Tensor*, double)’:
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:703:224: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  703 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:703:247: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  703 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                       ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:703:272: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  703 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                                                ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:703:296: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  703 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                                                                        ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:703:359: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  703 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                                                                                                                                       ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:703:414: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  703 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                                                                                                                                                                                              ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:703:119: warning: ‘T* at::Tensor::data() const [with T = c10::Half]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  703 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                       ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:703:142: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  703 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                              ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:703:167: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  703 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                       ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:703:191: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  703 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                               ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:703:258: warning: ‘T* at::Tensor::data() const [with T = c10::Half]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  703 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                                  ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:703:317: warning: ‘T* at::Tensor::data() const [with T = c10::Half]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  703 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                                                                                             ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:703:131: warning: ‘T* at::Tensor::data() const [with T = c10::BFloat16]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  703 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                   ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:703:154: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  703 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                          ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:703:179: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  703 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                   ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:703:203: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  703 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                           ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:703:274: warning: ‘T* at::Tensor::data() const [with T = c10::BFloat16]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  703 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                                                  ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:703:337: warning: ‘T* at::Tensor::data() const [with T = c10::BFloat16]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  703 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                                                                                                                 ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:703:151: warning: ‘T* at::Tensor::data() const [with T = c10::Half]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  703 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                       ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:703:174: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  703 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                              ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:703:199: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  703 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                       ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:703:227: warning: ‘T* at::Tensor::data() const [with T = c10::Half]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  703 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                   ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:703:294: warning: ‘T* at::Tensor::data() const [with T = c10::Half]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  703 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                                                                      ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:703:353: warning: ‘T* at::Tensor::data() const [with T = c10::Half]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  703 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                                                                                                                                 ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:703:166: warning: ‘T* at::Tensor::data() const [with T = c10::BFloat16]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  703 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                      ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:703:189: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  703 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                             ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:703:214: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  703 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                      ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:703:246: warning: ‘T* at::Tensor::data() const [with T = c10::BFloat16]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  703 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                      ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:703:317: warning: ‘T* at::Tensor::data() const [with T = c10::BFloat16]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  703 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                                                                                             ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:703:380: warning: ‘T* at::Tensor::data() const [with T = c10::BFloat16]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  703 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                                                                                                                                                            ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu: In function ‘void cuda_layer_norm_gradient(at::Tensor*, at::Tensor*, at::Tensor*, at::Tensor*, int, int, c10::IntList, at::Tensor*, at::Tensor*, double, at::Tensor*, at::Tensor*, at::Tensor*)’:
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:224: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:247: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                       ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:272: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                                                ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:333: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                                                                                                             ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:389: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                                                                                                                                                                     ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:438: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                                                                                                                                                                                                                      ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:489: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:550: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:120: warning: ‘T* at::Tensor::data() const [with T = c10::Half]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                        ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:143: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                               ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:168: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                        ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:233: warning: ‘T* at::Tensor::data() const [with T = c10::Half]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                         ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:293: warning: ‘T* at::Tensor::data() const [with T = c10::Half]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                                                                     ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:342: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                                                                                                                      ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:397: warning: ‘T* at::Tensor::data() const [with T = c10::Half]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                                                                                                                                                                             ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:462: warning: ‘T* at::Tensor::data() const [with T = c10::Half]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                                                                                                                                                                                                                                              ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:132: warning: ‘T* at::Tensor::data() const [with T = c10::BFloat16]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                    ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:155: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                           ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:180: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                    ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:249: warning: ‘T* at::Tensor::data() const [with T = c10::BFloat16]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                         ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:313: warning: ‘T* at::Tensor::data() const [with T = c10::BFloat16]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                                                                                         ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:362: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                                                                                                                                          ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:421: warning: ‘T* at::Tensor::data() const [with T = c10::BFloat16]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                                                                                                                                                                                                     ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:490: warning: ‘T* at::Tensor::data() const [with T = c10::BFloat16]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:152: warning: ‘T* at::Tensor::data() const [with T = c10::Half]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                        ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:175: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                               ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:200: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                        ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:265: warning: ‘T* at::Tensor::data() const [with T = c10::Half]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                                         ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:325: warning: ‘T* at::Tensor::data() const [with T = c10::Half]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                                                                                                     ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:378: warning: ‘T* at::Tensor::data() const [with T = c10::Half]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                                                                                                                                                          ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:433: warning: ‘T* at::Tensor::data() const [with T = c10::Half]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                                                                                                                                                                                                                 ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:498: warning: ‘T* at::Tensor::data() const [with T = c10::Half]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:167: warning: ‘T* at::Tensor::data() const [with T = c10::BFloat16]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                       ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:190: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                              ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:215: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                       ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:284: warning: ‘T* at::Tensor::data() const [with T = c10::BFloat16]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                                                            ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:348: warning: ‘T* at::Tensor::data() const [with T = c10::BFloat16]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                                                                                                                            ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:405: warning: ‘T* at::Tensor::data() const [with T = c10::BFloat16]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                                                                                                                                                                                     ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:464: warning: ‘T* at::Tensor::data() const [with T = c10::BFloat16]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:533: warning: ‘T* at::Tensor::data() const [with T = c10::BFloat16]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  811 |     DISPATCH_FLOAT_HALF_AND_BFLOAT_INOUT_TYPES(
+      |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     ^
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu: In instantiation of ‘void HostLayerNormGradient(const V*, const U*, const U*, at::Tensor*, int, int, const V*, const V*, double, T*, V*, V*) [with T = float; U = float; V = float]’:
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:562:   required from here
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:748:138: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  748 |       cuComputePartGradGammaBeta<<<blocks2, threads2, nshared2, stream>>>(
+      |                                                                                                                                          ^ 
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:748:210: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  748 |       cuComputePartGradGammaBeta<<<blocks2, threads2, nshared2, stream>>>(
+      |                                                                                                                                                                                                                  ^ 
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:748:247: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  748 |       cuComputePartGradGammaBeta<<<blocks2, threads2, nshared2, stream>>>(
+      |                                                                                                                                                                                                                                                       ^ 
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:761:137: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  761 |       cuComputeGradGammaBeta<<<blocks3, threads3, nshared3, stream>>>(
+      |                                                                                                                                         ^ 
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:761:174: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  761 |       cuComputeGradGammaBeta<<<blocks3, threads3, nshared3, stream>>>(
+      |                                                                                                                                                                              ^ 
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:779:129: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  779 |     cuComputeGradInput<<<blocks1, threads1, nshared, stream>>>(
+      |                                                                                                                                 ^ 
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu: In instantiation of ‘void HostLayerNormGradient(const V*, const U*, const U*, at::Tensor*, int, int, const V*, const V*, double, T*, V*, V*) [with T = float; U = float; V = c10::Half]’:
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:474:   required from here
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:748:138: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  748 |       cuComputePartGradGammaBeta<<<blocks2, threads2, nshared2, stream>>>(
+      |                                                                                                                                          ^ 
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:748:210: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  748 |       cuComputePartGradGammaBeta<<<blocks2, threads2, nshared2, stream>>>(
+      |                                                                                                                                                                                                                  ^ 
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:748:247: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  748 |       cuComputePartGradGammaBeta<<<blocks2, threads2, nshared2, stream>>>(
+      |                                                                                                                                                                                                                                                       ^ 
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:761:137: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  761 |       cuComputeGradGammaBeta<<<blocks3, threads3, nshared3, stream>>>(
+      |                                                                                                                                         ^ 
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:761:174: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  761 |       cuComputeGradGammaBeta<<<blocks3, threads3, nshared3, stream>>>(
+      |                                                                                                                                                                              ^ 
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:779:129: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  779 |     cuComputeGradInput<<<blocks1, threads1, nshared, stream>>>(
+      |                                                                                                                                 ^ 
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu: In instantiation of ‘void HostLayerNormGradient(const V*, const U*, const U*, at::Tensor*, int, int, const V*, const V*, double, T*, V*, V*) [with T = float; U = float; V = c10::BFloat16]’:
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:502:   required from here
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:748:138: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  748 |       cuComputePartGradGammaBeta<<<blocks2, threads2, nshared2, stream>>>(
+      |                                                                                                                                          ^ 
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:748:210: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  748 |       cuComputePartGradGammaBeta<<<blocks2, threads2, nshared2, stream>>>(
+      |                                                                                                                                                                                                                  ^ 
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:748:247: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  748 |       cuComputePartGradGammaBeta<<<blocks2, threads2, nshared2, stream>>>(
+      |                                                                                                                                                                                                                                                       ^ 
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:761:137: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  761 |       cuComputeGradGammaBeta<<<blocks3, threads3, nshared3, stream>>>(
+      |                                                                                                                                         ^ 
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:761:174: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  761 |       cuComputeGradGammaBeta<<<blocks3, threads3, nshared3, stream>>>(
+      |                                                                                                                                                                              ^ 
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:779:129: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  779 |     cuComputeGradInput<<<blocks1, threads1, nshared, stream>>>(
+      |                                                                                                                                 ^ 
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu: In instantiation of ‘void HostLayerNormGradient(const V*, const U*, const U*, at::Tensor*, int, int, const V*, const V*, double, T*, V*, V*) [with T = c10::Half; U = float; V = c10::Half]’:
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:510:   required from here
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:748:138: warning: ‘T* at::Tensor::data() const [with T = c10::Half]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  748 |       cuComputePartGradGammaBeta<<<blocks2, threads2, nshared2, stream>>>(
+      |                                                                                                                                          ^ 
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:748:210: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  748 |       cuComputePartGradGammaBeta<<<blocks2, threads2, nshared2, stream>>>(
+      |                                                                                                                                                                                                                  ^ 
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:748:247: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  748 |       cuComputePartGradGammaBeta<<<blocks2, threads2, nshared2, stream>>>(
+      |                                                                                                                                                                                                                                                       ^ 
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:761:137: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  761 |       cuComputeGradGammaBeta<<<blocks3, threads3, nshared3, stream>>>(
+      |                                                                                                                                         ^ 
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:761:174: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  761 |       cuComputeGradGammaBeta<<<blocks3, threads3, nshared3, stream>>>(
+      |                                                                                                                                                                              ^ 
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:779:129: warning: ‘T* at::Tensor::data() const [with T = c10::Half]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  779 |     cuComputeGradInput<<<blocks1, threads1, nshared, stream>>>(
+      |                                                                                                                                 ^ 
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu: In instantiation of ‘void HostLayerNormGradient(const V*, const U*, const U*, at::Tensor*, int, int, const V*, const V*, double, T*, V*, V*) [with T = c10::BFloat16; U = float; V = c10::BFloat16]’:
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:811:545:   required from here
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:748:138: warning: ‘T* at::Tensor::data() const [with T = c10::BFloat16]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  748 |       cuComputePartGradGammaBeta<<<blocks2, threads2, nshared2, stream>>>(
+      |                                                                                                                                          ^ 
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:748:210: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  748 |       cuComputePartGradGammaBeta<<<blocks2, threads2, nshared2, stream>>>(
+      |                                                                                                                                                                                                                  ^ 
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:748:247: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  748 |       cuComputePartGradGammaBeta<<<blocks2, threads2, nshared2, stream>>>(
+      |                                                                                                                                                                                                                                                       ^ 
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:761:137: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  761 |       cuComputeGradGammaBeta<<<blocks3, threads3, nshared3, stream>>>(
+      |                                                                                                                                         ^ 
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:761:174: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  761 |       cuComputeGradGammaBeta<<<blocks3, threads3, nshared3, stream>>>(
+      |                                                                                                                                                                              ^ 
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM/megatron/fused_kernels/layer_norm_cuda_kernel.cu:779:129: warning: ‘T* at::Tensor::data() const [with T = c10::BFloat16]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+  779 |     cuComputeGradInput<<<blocks1, threads1, nshared, stream>>>(
+      |                                                                                                                                 ^ 
+/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:244:1: note: declared here
+  244 |   T * data() const {
+      | ^ ~~
+[3/3] c++ layer_norm_cuda.o layer_norm_cuda_kernel.cuda.o -shared -L/shared_ssd_storage/shilonglei/anaconda3/envs/deepspeed/lib/python3.11/site-packages/torch/lib -lc10 -lc10_cuda -ltorch_cpu -ltorch_cuda -ltorch -ltorch_python -L/usr/local/cuda/lib64 -lcudart -o fused_mix_prec_layer_norm_cuda.so
+Loading extension module fused_mix_prec_layer_norm_cuda...
+>>> done with compiling and loading fused kernels. Compilation time: 254.377 seconds
+time to initialize megatron (seconds): 259.606
+[after megatron is initialized] datetime: 2023-09-13 01:49:49 
+building GPT model ...
+ > number of parameters on (tensor, pipeline) model parallel rank (0, 0): 153331712
+> learning rate decay style: cosine
+WARNING: could not find the metadata file checkpoints/gpt2/latest_checkpointed_iteration.txt 
+    will not load any checkpoints and will start from random
+time (ms) | load-checkpoint: 0.12
+[after model, optimizer, and learning rate scheduler are built] datetime: 2023-09-13 01:49:49 
+> building train, validation, and test datasets ...
+ > datasets target sizes (minimum size):
+    train:      200
+    validation: 4000
+    test:       4000
+> building train, validation, and test datasets for GPT ...
+ > building dataset index ...
+    reading sizes...
+    reading pointers...
+    reading document index...
+    creating numpy buffer of mmap...
+    creating memory view of numpy buffer...
+ > finished creating indexed dataset in 0.002789 seconds
+    number of documents: 10000
+ > dataset split:
+    train:
+     document indices in [0, 9490) total of 9490 documents
+    validation:
+     document indices in [9490, 9990) total of 500 documents
+    test:
+     document indices in [9990, 10000) total of 10 documents
+ > loading doc-idx mapping from /shared_ssd_storage/shilonglei/OOC/Megatron-DeepSpeed/dataset/data/meg-gpt2-oscar-en-10k_text_document_train_indexmap_200ns_1024sl_1234s_doc_idx.npy
+ > loading sample-idx mapping from /shared_ssd_storage/shilonglei/OOC/Megatron-DeepSpeed/dataset/data/meg-gpt2-oscar-en-10k_text_document_train_indexmap_200ns_1024sl_1234s_sample_idx.npy
+ > loading shuffle-idx mapping from /shared_ssd_storage/shilonglei/OOC/Megatron-DeepSpeed/dataset/data/meg-gpt2-oscar-en-10k_text_document_train_indexmap_200ns_1024sl_1234s_shuffle_idx.npy
+    loaded indexed file in 0.002 seconds
+    total number of samples: 27538
+    total number of epochs: 1
+ > loading doc-idx mapping from /shared_ssd_storage/shilonglei/OOC/Megatron-DeepSpeed/dataset/data/meg-gpt2-oscar-en-10k_text_document_valid_indexmap_4000ns_1024sl_1234s_doc_idx.npy
+ > loading sample-idx mapping from /shared_ssd_storage/shilonglei/OOC/Megatron-DeepSpeed/dataset/data/meg-gpt2-oscar-en-10k_text_document_valid_indexmap_4000ns_1024sl_1234s_sample_idx.npy
+ > loading shuffle-idx mapping from /shared_ssd_storage/shilonglei/OOC/Megatron-DeepSpeed/dataset/data/meg-gpt2-oscar-en-10k_text_document_valid_indexmap_4000ns_1024sl_1234s_shuffle_idx.npy
+    loaded indexed file in 0.002 seconds
+    total number of samples: 4637
+    total number of epochs: 3
+ > loading doc-idx mapping from /shared_ssd_storage/shilonglei/OOC/Megatron-DeepSpeed/dataset/data/meg-gpt2-oscar-en-10k_text_document_test_indexmap_4000ns_1024sl_1234s_doc_idx.npy
+ > loading sample-idx mapping from /shared_ssd_storage/shilonglei/OOC/Megatron-DeepSpeed/dataset/data/meg-gpt2-oscar-en-10k_text_document_test_indexmap_4000ns_1024sl_1234s_sample_idx.npy
+ > loading shuffle-idx mapping from /shared_ssd_storage/shilonglei/OOC/Megatron-DeepSpeed/dataset/data/meg-gpt2-oscar-en-10k_text_document_test_indexmap_4000ns_1024sl_1234s_shuffle_idx.npy
+    loaded indexed file in 0.001 seconds
+    total number of samples: 4005
+    total number of epochs: 126
+> finished creating GPT datasets ...
+[after dataloaders are built] datetime: 2023-09-13 01:49:50 
+done with setup ...
+time (ms) | model-and-optimizer-setup: 30.70 | train/valid/test-data-iterators-setup: 327.27
+training ...
+[before the start of training step] datetime: 2023-09-13 01:49:50 
+ iteration       10/      50 | elapsed time per iteration (ms): 622.5 | learning rate: 4.687E-07 | global batch size:     4 | lm loss: 1.097802E+01 | loss scale: 1.0 | grad norm: 11.014 | number of skipped iterations:   0 | number of nan iterations:   0 |
+Effective Tera Flops per GPU: 8.07 and total parameters 0.153 B
+NumWorkers: 1; SamplesPerStep: 4; IterationTime: 0.6224608182907104;  SamplesPerSecond: 6.42610728653424
+[Rank 0] (after 10 iterations) memory (MB) | allocated: 2355.9091796875 | max allocated: 3921.5126953125 | reserved: 4400.0 | max reserved: 4400.0
+time (ms) | forward-compute: 222.31 | backward-compute: 382.75 | backward-params-all-reduce: 1.88 | backward-embedding-all-reduce: 0.03 | optimizer: 14.14 | batch-generator: 1.65
+ iteration       20/      50 | elapsed time per iteration (ms): 555.2 | learning rate: 9.375E-07 | global batch size:     4 | lm loss: 1.081622E+01 | loss scale: 1.0 | grad norm: 11.188 | number of skipped iterations:   0 | number of nan iterations:   0 |
+Effective Tera Flops per GPU: 9.05 and total parameters 0.153 B
+NumWorkers: 1; SamplesPerStep: 4; IterationTime: 0.5552004337310791;  SamplesPerSecond: 7.204605322656266
+time (ms) | forward-compute: 157.64 | backward-compute: 383.81 | backward-params-all-reduce: 1.89 | backward-embedding-all-reduce: 0.03 | optimizer: 10.42 | batch-generator: 0.71

@@ -38,6 +38,13 @@ def model_provider(pre_process=True, post_process=True):
         pre_process=pre_process,
         post_process=post_process
     )
+                # --- lsl ---
+            # add to make All_to_all in deepspeed.moe work
+    global dist
+    from deepspeed.accelerator import get_accelerator
+    from deepspeed import comm as dist
+    dist_backend = get_accelerator().communication_backend_name()
+    dist.init_distributed(dist_backend=dist_backend, dist_init_required=None)
     return model
 
 
@@ -120,6 +127,6 @@ def train_valid_test_datasets_provider(train_val_test_num_samples):
 
 
 if __name__ == "__main__":
-
+    # ooc_llm Megatron-LM_MoE  pretrain()
     pretrain(train_valid_test_datasets_provider, model_provider, forward_step,
              args_defaults={'tokenizer_type': 'GPT2BPETokenizer'})

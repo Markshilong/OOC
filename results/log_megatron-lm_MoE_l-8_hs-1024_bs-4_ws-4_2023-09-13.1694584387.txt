@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM_MoE/pretrain_gpt.py", line 27, in <module>
+    from megatron.training import pretrain
+  File "/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM_MoE/megatron/training.py", line 41, in <module>
+    from megatron.optimizer import get_megatron_optimizer
+  File "/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM_MoE/megatron/optimizer/__init__.py", line 23, in <module>
+    from .optimizer import Float16OptimizerWithFloat16Params, FP32Optimizer
+  File "/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM_MoE/megatron/optimizer/optimizer.py", line 30, in <module>
+    from .clip_grads import clip_grad_norm_fp32, count_zeros_fp32
+  File "/shared_ssd_storage/shilonglei/OOC/ooc_llm/Megatron-LM_MoE/megatron/optimizer/clip_grads.py", line 19, in <module>
+    from torch._six import inf
+ModuleNotFoundError: No module named 'torch._six'

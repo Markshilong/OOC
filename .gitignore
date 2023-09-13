@@ -24,3 +24,9 @@ data/zhwiki.corpus.json
 data/enwiki.corpus.json
 
 t.log
+
+# --- lsl --
+Megatron-LM/checkpoints/
+Megatron-DeepSpeed/dataset/data/
+Megatron-DeepSpeed/examples_deepspeed/MoE/output
+Megatron-DeepSpeed/examples_deepspeed/MoE/tensorboard

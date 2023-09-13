@@ -33,6 +33,10 @@ if [[ 'megatron-lm' = $METHOD ]]; then
 
     echo -e "\n\n !!! The training model size in megatron-lm might be much smaller than others, such as zero-offload, stronghold, etc. !!! \n\n "
 
+elif [[ 'megatron-lm_MoE' = $METHOD ]]; then
+    _SRC_DIR=${script_dir}/../Megatron-LM_MoE/examples
+    _SCRIPT=sc22-gpt-megatron.sh
+
 elif [[ 'zero-offload' = $METHOD ]]; then
     _SRC_DIR=${script_dir}/../DeepSpeedExample/examples
     _SCRIPT=sc22-gpt-zero-offloading.sh
@@ -75,4 +79,4 @@ CMD="cd ${_SRC_DIR}/.. && \
     cd -"
 
 echo $CMD
-# eval $CMD
+eval $CMD

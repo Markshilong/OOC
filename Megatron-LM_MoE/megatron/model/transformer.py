@@ -43,6 +43,89 @@ from megatron.model.utils import attention_mask_func, openai_gelu, erf_gelu
         hyperparameters: transformer hyperparameters
 """
 
+class new_ParallelMLP(MegatronModule):
+    """MLP.
+
+    MLP will take the input with h hidden state, project it to 4*h
+    hidden dimension, perform nonlinear transformation, and project the
+    state back into h hidden dimension.
+    """
+
+    def __init__(self, config, moe=False, enable_expert_tensor_parallelism=False):
+        super(ParallelMLP, self).__init__()
+        args = get_args()
+
+        self.add_bias = config.add_bias_linear
+
+        ffn_hidden_size = config.ffn_hidden_size
+        if config.gated_linear_unit:
+            ffn_hidden_size *= 2
+
+        # Project to 4h. If using swiglu double the output width, see https://arxiv.org/pdf/2002.05202.pdf
+        self.dense_h_to_4h = tensor_parallel.ColumnParallelLinear(
+            config.hidden_size,
+            ffn_hidden_size,
+            config=config,
+            init_method=config.init_method,
+            bias=self.add_bias,
+            gather_output=False,
+            skip_bias_add=True,
+            moe=moe,
+            enable_expert_tensor_parallelism=enable_expert_tensor_parallelism
+        )
+
+        self.bias_gelu_fusion = False
+        self.activation_func = None
+        self.swiglu = args.swiglu
+
+        if args.openai_gelu:
+            self.activation_func = openai_gelu
+        elif args.onnx_safe:
+            self.activation_func = erf_gelu
+        elif args.swiglu:
+            def swiglu(x):
+                x = torch.chunk(x, 2, dim=-1)
+                return F.silu(x[0]) * x[1]
+            self.activation_func = swiglu
+        elif args.squared_relu:
+            def squared_relu(x):
+                return torch.pow(F.relu(x), 2)
+            self.activation_func = squared_relu
+        else:
+            self.bias_gelu_fusion = args.bias_gelu_fusion
+            self.activation_func = F.gelu
+
+        # Project back to h.
+        self.dense_4h_to_h = tensor_parallel.RowParallelLinear(
+            config.ffn_hidden_size,
+            config.hidden_size,
+            config=config,
+            init_method=config.output_layer_init_method,
+            bias=self.add_bias,
+            input_is_parallel=True,
+            moe=moe,
+            enable_expert_tensor_parallelism=enable_expert_tensor_parallelism
+        )
+
+    def forward(self, hidden_states):
+
+        # [s, b, 4hp]
+        intermediate_parallel, bias_parallel = self.dense_h_to_4h(hidden_states)
+
+        if self.bias_gelu_fusion:
+            assert self.add_bias is True
+            # DeepSpeed FLOPS profiler temporarily substitues functions like F.gelu to calculate the throughput
+            assert hasattr(self, "__flops__") or self.activation_func == F.gelu
+            intermediate_parallel = bias_gelu_impl(intermediate_parallel, bias_parallel)
+        else:
+            if bias_parallel is not None:
+                intermediate_parallel = intermediate_parallel + bias_parallel
+            intermediate_parallel = self.activation_func(intermediate_parallel)
+
+        # [s, b, h]
+        output, output_bias = self.dense_4h_to_h(intermediate_parallel)
+        return output, output_bias
+
 class ParallelMLP(MegatronModule):
     """MLP.
 
@@ -430,28 +513,29 @@ class ParallelTransformerLayer(MegatronModule):
         #                        output_layer_init_method)
 
         # --- lsl ---
-        # MLP in Megatron_MoE
+        # Megatron_MoE MLP
         self.num_experts = 16
         # if args.num_experts_switch is not None:
-        self.mlp = SwitchMLP(config) # Megatron-LM's MoE
+        #     self.mlp = SwitchMLP(config) # Megatron-LM's MoE
         # else:
-        #     if self.num_experts <= 1: # dense, not MoE
-        #         self.mlp = ParallelMLP(config)
-        #     else: # DeepSpeed's MoE
-        #         enable_expert_tensor_parallelism = args.enable_expert_tensor_parallelism
-        #         self.mlp = MoE(args.hidden_size,
-        #                         ParallelMLP(config,
-        #                             moe=True,
-        #                             enable_expert_tensor_parallelism=enable_expert_tensor_parallelism),
-        #                         num_experts=self.num_experts,
-        #                         ep_size=args.moe_expert_parallel_size,
-        #                         k=args.topk,
-        #                         use_residual=(args.mlp_type == 'residual'),
-        #                         capacity_factor=args.moe_train_capacity_factor,
-        #                         eval_capacity_factor=args.moe_eval_capacity_factor,
-        #                         min_capacity=args.moe_min_capacity,
-        #                         drop_tokens=args.moe_token_dropping, use_tutel=args.use_tutel,
-        #                         enable_expert_tensor_parallelism=enable_expert_tensor_parallelism)
+        if self.num_experts <= 1: # dense, not MoE
+            # self.mlp = ParallelMLP(config)
+            self.mlp = ParallelMLP(init_method, output_layer_init_method)
+        else: # DeepSpeed's MoE
+            from deepspeed.moe.layer import MoE
+            # enable_expert_tensor_parallelism = args.enable_expert_tensor_parallelism
+            # lsl: hard code configs
+            self.mlp = MoE(args.hidden_size,
+                            ParallelMLP(init_method, output_layer_init_method),
+                            num_experts=self.num_experts,
+                            ep_size=1,
+                            k=1,
+                            use_residual= False,
+                            capacity_factor=1.0,
+                            eval_capacity_factor=1.0,
+                            min_capacity=4,
+                            drop_tokens=True, use_tutel=False,
+                            enable_expert_tensor_parallelism=False)
         
 
     def forward(self, hidden_states, attention_mask,
@@ -523,7 +607,13 @@ class ParallelTransformerLayer(MegatronModule):
             layernorm_output = self.post_inter_attention_layernorm(layernorm_input)
 
         # MLP.
-        mlp_output, mlp_bias = self.mlp(layernorm_output)
+        # mlp_output, mlp_bias = self.mlp(layernorm_output)
+        moe_loss = torch.tensor(0.0, device=layernorm_output.device, dtype=layernorm_output.dtype)
+        mlp_bias = torch.tensor(0.0, device=layernorm_output.device, dtype=layernorm_output.dtype)
+        if self.num_experts == 1:
+            mlp_output, mlp_bias = self.mlp(layernorm_output)
+        else:
+            mlp_output, moe_loss, _ = self.mlp(layernorm_output)
 
         # Second residual connection.
         if self.apply_residual_connection_post_layernorm:
@@ -542,7 +632,9 @@ class ParallelTransformerLayer(MegatronModule):
         if get_key_value:
             output = [output, presents]
 
-        return output
+        print(f"### layer_number = {self.layer_number} finished forwarding")
+
+        return output, moe_loss
 
 
 class ParallelTransformer(MegatronModule):
@@ -615,6 +707,36 @@ class ParallelTransformer(MegatronModule):
 
     def _checkpointed_forward(self, hidden_states, attention_mask,
                               encoder_output, enc_dec_attn_mask):
+        
+        # --- from New Megatron-Deepspeed
+        # args = get_args()
+
+        # """Forward method with activation checkpointing."""
+        # def custom(start, end):
+        #     def custom_forward(*args, **kwargs):
+        #         x_, *args = args
+        #         moe_losses = []
+        #         for index in range(start, end):
+        #             layer = self._get_layer(index)
+        #             x_, moe_loss = layer(x_, *args, **kwargs)
+        #             moe_losses.append(moe_loss)
+        #         return (x_, *moe_losses)
+        #     return custom_forward
+        
+        # moe_losses = []
+        # # Make sure memory is freed.
+        # tensor_parallel.reset_checkpointed_activations_memory_buffer()
+        # l = 0
+        # while l < self.num_layers:
+        #     hidden_states, *local_moe_losses = tensor_parallel.checkpoint(
+        #         custom(l, l + self.checkpoint_num_layers), False,
+        #         hidden_states, attention_mask, encoder_output, enc_dec_attn_mask,
+        #         None, None, None, None, rotary_pos_emb)
+        #     moe_losses.extend(local_moe_losses)
+        #     l += self.checkpoint_num_layers
+
+        # return hidden_states, moe_losses
+        
         """Forward method with activation checkpointing."""
         def custom(start, end):
             def custom_forward(*inputs):
