@@ -260,9 +260,9 @@ if [ "${USE_INTERNAL_DATA}" = "true" ]; then
     0.01359 ${ARX} 0.01588 ${GIT}"
 else
     # ---- lsl ----
-    VOCAB_PATH=/shared_ssd_storage/shilonglei/OOC/Megatron-DeepSpeed/dataset/data/gpt2-vocab.json
-    MERGE_PATH=/shared_ssd_storage/shilonglei/OOC/Megatron-DeepSpeed/dataset/data/gpt2-merges.txt
-    DATA_PATH=/shared_ssd_storage/shilonglei/OOC/Megatron-DeepSpeed/dataset/data/meg-gpt2-oscar-en-10k_text_document
+    VOCAB_PATH=/shared_ssd_storage/shilonglei/OOC/ooc_llm/dataset/data/gpt2-vocab.json
+    MERGE_PATH=/shared_ssd_storage/shilonglei/OOC/ooc_llm/dataset/data/gpt2-merges.txt
+    DATA_PATH=/shared_ssd_storage/shilonglei/OOC/ooc_llm/dataset/data/meg-gpt2-oscar-en-10k_text_document
     # ----------
 
     # --- original ---

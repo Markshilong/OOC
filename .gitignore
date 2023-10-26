@@ -27,6 +27,7 @@ t.log
 
 # --- lsl --
 Megatron-LM/checkpoints/
-Megatron-DeepSpeed/dataset/data/
-Megatron-DeepSpeed/examples_deepspeed/MoE/output
-Megatron-DeepSpeed/examples_deepspeed/MoE/tensorboard
+Megatron-DeepSpeed_SH/dataset/data/
+Megatron-DeepSpeed_SH/examples_deepspeed/MoE/output
+Megatron-DeepSpeed_SH/examples_deepspeed/MoE/tensorboard
+dataset/data

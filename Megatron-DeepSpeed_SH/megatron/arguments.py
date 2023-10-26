@@ -66,6 +66,62 @@ def parse_args(extra_args_provider=None, ignore_unknown_args=False):
 
     return args
 
+# ----------- gl version --------------
+def parse_gl_args():
+    """Parse all arguments."""
+    parser = argparse.ArgumentParser(
+        description="Megatron-LM Arguments", allow_abbrev=False
+    )
+    # Standard arguments.
+    parser = _add_gl_args(parser)
+    args, _ = parser.parse_known_args()
+    return args
+
+def _add_gl_args(parser):
+    group = parser.add_argument_group(title="@gl, for mlaccl")
+
+    group.add_argument(
+        "--enable-l2l",
+        action="store_true",
+        help="L2L manner",
+    )
+
+    group.add_argument(
+        "--enable-gl",
+        action="store_true",
+        help="swaping tensors between GPUs and CPUs as a turning-around manner",
+    )
+
+    group.add_argument(
+        "--gl-debug-print",
+        action="store_true",
+        help="if printing debug information defined in user's source code",
+    )
+
+    group.add_argument(
+        "--gl-window-size",
+        type=int,
+        default=2,
+        help="the number of laryers that are stored in CUDA",
+    )
+
+    group.add_argument(
+        "--gl-enable-ddp", action="store_true", help="distributed data parallel"
+    )
+
+    group.add_argument("--gl-world-size", type=int, default=2, help="world size")
+
+    group.add_argument(
+        "--gl-ray-max-concurrency",
+        type=int,
+        default=86,
+        help="ray max_concurrency for actor options",
+    )
+
+    return parser
+
+# ------------------------------------
+
 def validate_args(args, defaults={}):
     # Tensor model parallel size.
     args.tensor_model_parallel_size = min(

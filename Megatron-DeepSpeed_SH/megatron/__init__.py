@@ -18,3 +18,7 @@ from .utils import (print_rank_0,
                     print_rank_last,
                     is_rank_0,
                     is_aml)
+
+# --- gl version add ---
+from .global_vars import set_global_variables
+from .global_vars import set_args

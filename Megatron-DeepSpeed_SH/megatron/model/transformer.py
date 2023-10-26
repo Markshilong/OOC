@@ -1535,7 +1535,7 @@ class ParallelTransformer(MegatronModule):
         self.post_process = post_process
         self.input_tensor = None
         self.drop_path_rate = drop_path_rate
-        self.transformer_impl = args.transformer_impl
+        self.transformer_impl = args.transformer_impl # default = 'local'
         self.retro_add_retriever = args.retro_add_retriever
         self.ds_inference = args.ds_inference
 
@@ -1564,7 +1564,7 @@ class ParallelTransformer(MegatronModule):
 
             del version, packaging
 
-        self.use_fp8 = args.fp8_e4m3 or args.fp8_hybrid
+        self.use_fp8 = args.fp8_e4m3 or args.fp8_hybrid # should be False
         self.fp8_recipe = None
         self.fp8_group = None
         if self.use_fp8:
@@ -1613,6 +1613,16 @@ class ParallelTransformer(MegatronModule):
                 current_layer_type = _get_layer_type(
                     model_type, layer_type, self.retro_layer_numbers,
                     layer_number)
+                # =-----gl version ---
+                if args.enable_gl:
+                    return GL_ParallelTransformerLayer(
+                        config,
+                        layer_number,
+                        layer_type=current_layer_type,
+                        self_attn_mask_type=self_attn_mask_type,
+                        drop_path_rate=self.drop_path_rates[layer_number - 1],
+                        num_experts=n_e)
+                # ---------------------
                 return ParallelTransformerLayer(
                     config,
                     layer_number,
@@ -1700,7 +1710,7 @@ class ParallelTransformer(MegatronModule):
 
             # Create the list of MoE experts
             if len(num_experts) == 1:
-                num_experts = num_experts * (args.num_layers // args.expert_interval)
+                num_experts = num_experts * (args.num_layers // args.expert_interval) # if num_experts = [1] then after this line, num_experts = [1,1,1,...,1]
 
             # Build the layers
             self.layers = []
@@ -1723,6 +1733,54 @@ class ParallelTransformer(MegatronModule):
                         layer.self_attention.core_attention.attention_dropout.p =\
                             args.retro_encoder_attention_dropout
                     layer.hidden_dropout = args.retro_encoder_hidden_dropout
+
+        # ============================================================
+        # -----gl version ---
+        if args.enable_gl:
+            device = torch.cuda.current_device()
+            _max_num_units = min(args.gl_window_size * 2, args.num_layers)
+
+            for i in range(_max_num_units):
+                unit = OrderedDict()
+                _layer = self.layers[0]  # every layer is of the same structure
+
+                for module_name, module in _layer.named_modules():
+                    for param_name, param in module._parameters.items():
+                        _pkey = module_name + param_name
+
+                        if param is not None:
+                            unit[_pkey] = (
+                                _layer._gl_cpu_version_items[_pkey]
+                                .to(device)
+                                .requires_grad_(param.requires_grad)
+                                .cuda()
+                            )
+
+                        _gkey = _pkey + ".grad"
+                        if param.grad is not None:
+                            unit[_gkey] = (
+                                _layer._gl_cpu_version_items[_gkey]
+                                .to(device)
+                                .requires_grad_(param.grad.requires_grad)
+                                .cuda()
+                            )
+                        else:
+                            unit[_gkey] = _layer._gl_cpu_version_items[_gkey].to(device)
+
+                    for buffer_name, buffer in module._buffers.items():
+                        if buffer is not None:
+                            _bkey = "buffer_" + module_name + buffer_name
+                            unit[_bkey] = _layer._gl_cpu_version_items[_bkey].to(device)
+
+                _layer._gl_cuda_cache_queue.append(unit)
+
+            #print(
+            #    f"\t --> _gl_cuda_cache_queue, len={len(_layer._gl_cuda_cache_queue)}, _max_num_units={_max_num_units}"
+            #)
+            #print(f"\t --> each unit in _gl_cuda_cache_queue:")
+            #for key, t in unit.items():
+            #    print(f"\t \t --> {key}: {t.size()}, {t.device}")
+            ## ============================ending===========================
 
         if self.post_process and self.post_layer_norm:
             # Final layer norm before output.
@@ -2048,3 +2106,470 @@ class LMHeadPipe(MegatronModule):
             return logits
         else:
             return logits, attention_mask
+
+
+# -------------------- gl version -----------------------------------
+
+from collections import OrderedDict, deque
+from typing import (
+    Union,
+    Tuple,
+    Any,
+    Callable,
+    Iterator,
+    Set,
+    Optional,
+    overload,
+    TypeVar,
+    Mapping,
+    Dict,
+    List,
+)
+from megatron import get_timers
+
+class MockTensor:
+    def __init__(self, tensor, loc):
+        self.device = tensor.device
+        self.loc = loc
+
+def _get_item_from_cpu_cache(_cpu_cache, key, value=None):
+    if key in _cpu_cache and _cpu_cache[key] is not None:
+        ## ----- nvme -----
+        #if isinstance(_cpu_cache[key], MockTensor):
+        #    #import offloading_utils
+        #    #_mock_tensor = _cpu_cache[key]
+        #    #_cpu_cache[key] = offloading_utils.load(_cpu_cache[key].loc)[0]
+        #    #_cpu_cache[key].mock_tensor = _mock_tensor
+
+        #    _cpu_cache[key] = ray.get(_cpu_cache[key].loc)
+        ## ----------------
+        return _cpu_cache[key]
+
+    _cpu_cache[key] = torch.zeros(
+        value.size(),
+        dtype=value.dtype,
+        layout=value.layout,
+        device=torch.device("cpu"),
+        pin_memory=True,  # (torch.cuda.is_available() and not value.is_sparse)
+    ).to("cpu", non_blocking=True)
+    return _cpu_cache[key]
+
+def _move_item_to_nvme(_cpu_cache, key, value=None):
+    if key in _cpu_cache and _cpu_cache[key] is not None:
+        ## ----- nvme -----
+        #if not isinstance(_cpu_cache[key], MockTensor): 
+        #    #import offloading_utils
+        #    if hasattr(_cpu_cache[key], 'mock_tensor'):
+        #        #mock_tensor = _cpu_cache[key].mock_tensor
+        #        #del _cpu_cache[key].mock_tensor
+        #        #offloading_utils.save([_cpu_cache[key]], mock_tensor.loc)
+        #        #_cpu_cache[key] = mock_tensor
+        #        
+        #        r = ray.put(_cpu_cache[key])
+        #        mock_tensor = MockTensor(_cpu_cache[key], r)
+        #        _cpu_cache[key] = mock_tensor
+        #    else:
+        #        #saved_name = '/tmp/' + str(id(_cpu_cache[key])) + str(random.random()) + '.pt'
+        #        #mock_tensor = MockTensor(_cpu_cache[key], saved_name)
+        #        #offloading_utils.save([_cpu_cache[key]], saved_name)
+        #        #_cpu_cache[key] = mock_tensor
+        #        
+        #        r = ray.put(_cpu_cache[key])
+        #        mock_tensor = MockTensor(_cpu_cache[key], r)
+        #        _cpu_cache[key] = mock_tensor
+        ## ----------------
+        pass 
+
+    return
+
+class GL_ParallelTransformerLayer(ParallelTransformerLayer):
+    def __init__(self, *args, **kwargs):
+        assert (
+            "_gl_cuda_cache_queue" in kwargs
+        ), "Please initialize GL_ParallelTransformerLayer using _cuda_cache_queue"
+        self._gl_cuda_cache_queue = kwargs.pop("_gl_cuda_cache_queue")
+
+        super(GL_ParallelTransformerLayer, self).__init__(*args, **kwargs)
+
+        # storage parameters, gradients and buffers in cpu-side
+        self._gl_cpu_version_items = OrderedDict()
+
+        # init cpu_version storage
+        for module_name, module in self.named_modules():
+            for param_name, param in module._parameters.items():
+                if param is not None:
+                    _pkey = module_name + param_name
+
+                    self._gl_cpu_version_items[_pkey] = torch.empty(
+                        param.size(),
+                        dtype=param.dtype,
+                        layout=param.layout,
+                        device=torch.device("cpu"),
+                        pin_memory=True,  # (torch.cuda.is_available() and not tensor.is_sparse),
+                    ).copy_(param, non_blocking=False)
+                    param.data = self._gl_cpu_version_items[_pkey]
+
+                    _gkey = _pkey + ".grad"
+                    if param.grad is not None:
+                        self._gl_cpu_version_items[_gkey] = (
+                            torch.empty(
+                                param.grad.size(),
+                                dtype=param.grad.dtype,
+                                layout=param.grad.layout,
+                                device=torch.device("cpu"),
+                                pin_memory=True,  # (torch.cuda.is_available() and not tensor.is_sparse)
+                            )
+                            .copy_(
+                                param.grad,
+                                non_blocking=False,
+                            )
+                            .requires_grad_(param.grad.requires_grad)
+                        )
+                        param.grad.data = self._gl_cpu_version_items[_gkey]
+                    else:
+                        self._gl_cpu_version_items[_gkey] = torch.empty(
+                            param.size(),
+                            dtype=param.dtype,
+                            layout=param.layout,
+                            device=torch.device("cpu"),
+                            pin_memory=True,  # (torch.cuda.is_available() and not tensor.is_sparse)
+                        ).copy_(torch.zeros_like(param), non_blocking=False)
+
+                        param.grad = self._gl_cpu_version_items[_gkey]
+
+            for buffer_name, buffer in module._buffers.items():
+                if buffer is not None:
+                    _bkey = "buffer_" + module_name + buffer_name
+
+                    self._gl_cpu_version_items[_bkey] = torch.empty(
+                        buffer.size(),
+                        dtype=buffer.dtype,
+                        layout=buffer.layout,
+                        device=torch.device("cpu"),
+                        pin_memory=True,  # (torch.cuda.is_available() and not tensor.is_sparse)
+                    ).copy_(buffer, non_blocking=False)
+        return
+
+    def compute_should_use_set_data(self, tensor, tensor_applied):
+        # if torch._has_compatible_shallow_copy_type(tensor, tensor_applied):
+        #     # If the new tensor has compatible tensor type as the existing tensor,
+        #     # the current behavior is to change the tensor in-place using `.data =`,
+        #     # and the future behavior is to overwrite the existing tensor. However,
+        #     # changing the current behavior is a BC-breaking change, and we want it
+        #     # to happen in future releases. So for now we introduce the
+        #     # `torch.__future__.get_overwrite_module_params_on_conversion()`
+        #     # global flag to let the user control whether they want the future
+        #     # behavior of overwriting the existing tensor or not.
+        #     return not torch.__future__.get_overwrite_module_params_on_conversion()
+        # else:
+        #     return False
+
+        """
+        If return False, would be error on "grad of a different type"
+        todo. @gl
+        """
+        return True
+
+    @torch.no_grad()
+    def cpu(self, non_blocking=True):
+        # already cached in cpu-side
+        if not hasattr(self, "_gl_cuda_cache_unit"):
+            return
+
+        _cuda_cache_unit = self._gl_cuda_cache_unit
+
+        def _apply_cpu(module_name, module, cpu_version_items):
+            for param_name, param in module._parameters.items():
+                if param is None:
+                    continue
+                if param.grad is None and str(param.device) == "cpu":
+                    continue
+                if (
+                    param.grad is not None
+                    and str(param.grad.device) == "cpu"
+                    and str(param.device) == "cpu"
+                ):
+                    continue
+
+                _pkey = module_name + param_name
+
+                param_applied = (
+                    _get_item_from_cpu_cache(self._gl_cpu_version_items, _pkey, param)
+                    .copy_(param, non_blocking=non_blocking)
+                    .requires_grad_(param.requires_grad)
+                )
+                _move_item_to_nvme(self._gl_cpu_version_items, _pkey)
+
+                if param.grad is None:
+                    param_applied.grad = None
+
+                    use_shallow_copy = self.compute_should_use_set_data(
+                        param, param_applied
+                    )
+
+                    if use_shallow_copy:
+                        _cuda_cache_unit[_pkey] = param.data
+                        param.data = param_applied
+                        param.grad = None
+                    else:
+                        assert param.is_leaf
+                        _cuda_cache_unit[_pkey] = module._parameters[param_name]
+                        module._parameters[param_name] = param_applied.requires_grad_(
+                            param.requires_grad
+                        )
+
+                else:
+                    _gkey = _pkey + ".grad"
+
+                    grad_applied = (
+                        _get_item_from_cpu_cache(
+                            self._gl_cpu_version_items, _gkey, param.grad
+                        )
+                        .copy_(param.grad)  # todo? @gl copy_ or add_
+                        .requires_grad_(param.grad.requires_grad)
+                    )
+
+                    # print("grad_applied", grad_applied.device)
+                    # grad_applied = grad_applied.cpu()
+                    # print("grad_applied", grad_applied.device)
+
+                    use_shallow_copy = self.compute_should_use_set_data(
+                        param.grad, grad_applied
+                    )
+
+                    # param_applied.grad = grad_applied
+
+                    if use_shallow_copy:
+                        _cuda_cache_unit[_pkey] = param.data
+                        _cuda_cache_unit[_gkey] = param.grad.data
+
+                        param_applied.grad = grad_applied
+                        param.data = param_applied
+                        # param.grad.data = grad_applied
+
+                    else:
+                        assert param.is_leaf
+                        _cuda_cache_unit[_pkey] = module._parameters[param_name]
+                        _cuda_cache_unit[_gkey] = module._parameters[param_name].grad
+
+                        module._parameters[param_name] = param_applied.requires_grad_(
+                            param.requires_grad
+                        )
+                        module._parameters[
+                            param_name
+                        ].grad = grad_applied.requires_grad_(param.grad.requires_grad)
+
+                    _move_item_to_nvme(self._gl_cpu_version_items, _gkey)
+
+            for buffer_name, buffer in module._buffers.items():
+                if buffer is None:
+                    continue
+
+                if str(buffer.device) == "cpu":
+                    continue
+
+                _bkey = "buffer_" + module_name + buffer_name
+
+                _cuda_cache_unit[_bkey] = module._buffers[buffer_name]
+
+                module._buffers[buffer_name] = _get_item_from_cpu_cache(
+                    self._gl_cpu_version_items, _bkey, buffer
+                ).copy_(buffer, non_blocking=non_blocking)
+
+                _move_item_to_nvme(self._gl_cpu_version_items, _bkey)
+
+        for module_name, module in self.named_modules():
+            _apply_cpu(module_name, module, self._gl_cpu_version_items)
+
+        # for key, value in self._gl_cpu_version_items.items():
+        #     print(f" -- debug: _gl_cpu_version_items after apply_cpu: {key}, {value.device}")
+
+        # return cuda_cache as a unit
+        self._gl_cuda_cache_queue.append(_cuda_cache_unit)
+
+        # remove the cuda cache from itself
+        del self._gl_cuda_cache_unit
+
+        pass
+
+    @torch.no_grad()
+    def cuda(self, device=None, non_blocking=True):
+        # already cached in cuda-side
+        if hasattr(self, "_gl_cuda_cache_unit"):
+            return
+
+        # current cuda device
+        device = torch.cuda.current_device() if device is None else device
+
+        # pick up an allocated cuda_cuda_unit from cuda_cache_queue
+        _cuda_cache_unit = self._gl_cuda_cache_queue.pop()
+        self._gl_cuda_cache_unit = _cuda_cache_unit
+
+        # for key, value in self._gl_cpu_version_items.items():
+        #     print(f" -- debug: _gl_cpu_version_items before: {key}, {value.device}")
+
+        def _apply_cuda(module_name, module, cpu_version_items):
+            for param_name, param in module._parameters.items():
+                if param is None:
+                    continue
+
+                _pkey = module_name + param_name
+
+                if _pkey not in _cuda_cache_unit or _cuda_cache_unit[_pkey] is None:
+                    print(f" --> _apply_cuda: failed to reuse cuda tensor: {_pkey}")
+
+                    param_applied = _get_item_from_cpu_cache(
+                        cpu_version_items, _pkey).to(
+                            device,
+                            non_blocking=non_blocking,
+                            copy=True,
+                        )
+                else:
+                    param_applied = _cuda_cache_unit[_pkey].copy_(
+                        _get_item_from_cpu_cache(
+                            cpu_version_items, _pkey), non_blocking=non_blocking
+                    )
+                    assert (
+                        str(param_applied.device) != "cpu"
+                    ), "the tensor should be on cuda device after invoking _apply_cuda()"
+
+                param_applied = param_applied.requires_grad_(param.requires_grad)
+
+                if param.grad is None:
+                    param_applied.grad = None
+
+                    use_shallow_copy = self.compute_should_use_set_data(
+                        param, param_applied
+                    )
+                    if use_shallow_copy:
+                        param.data = param_applied
+                        param.grad = None
+                    else:
+                        assert param.is_leaf
+                        module._parameters[param_name] = param_applied.requires_grad_(
+                            True
+                        )
+
+                else:
+                    _gkey = _pkey + ".grad"
+
+                    if _gkey not in _cuda_cache_unit or _cuda_cache_unit[_gkey] is None:
+                        print(f" --> _apply_cuda: failed to reuse cuda tensor: {_gkey}")
+
+                        grad_applied = _get_item_from_cpu_cache(
+                            cpu_version_items, _gkey).to(
+                                device,
+                                non_blocking=non_blocking,
+                                copy=True,
+                            )
+                    else:
+                        # print(f"before cpu_version_items {_gkey},", cpu_version_items[_gkey].device,
+                        #     id(cpu_version_items[_gkey]) == id(self._gl_cpu_version_items[_gkey]))
+
+                        grad_applied = _cuda_cache_unit[_gkey].copy_(
+                            _get_item_from_cpu_cache(
+                                cpu_version_items, _gkey), non_blocking=non_blocking
+                        )
+
+                        # print(f"after {_gkey},", cpu_version_items[_gkey].device,
+                        #     id(cpu_version_items[_gkey]) == id(self._gl_cpu_version_items[_gkey]))
+
+                        assert (
+                            str(grad_applied.device) != "cpu"
+                        ), "the gradient should be on cuda device after invoking _apply_cuda()"
+
+                        # param_applied.grad = grad_applied
+
+                        use_shallow_copy = self.compute_should_use_set_data(
+                            param, param_applied
+                        )
+                        if use_shallow_copy:
+                            param_applied.grad = grad_applied
+                            param.data = param_applied
+
+                            # the big buggy error: it would make cpu_verion grads be located at CUDA side
+                            # why. how to address it?
+                            # todo. @gl.
+                            # param.grad.data = grad_applied
+                        else:
+                            assert param.is_leaf
+                            module._parameters[
+                                param_name
+                            ] = param_applied.requires_grad_(param.requires_grad)
+                            module._parameters[
+                                param_name
+                            ].grad = grad_applied.requires_grad_(
+                                param.grad.requires_grad
+                            )
+
+            for buffer_name, buffer in module._buffers.items():
+                if buffer is None:
+                    continue
+
+                _bkey = "buffer_" + module_name + buffer_name
+
+                if _bkey not in _cuda_cache_unit or _cuda_cache_unit[_bkey] is None:
+                    print(
+                        f" --> _apply_cuda: failed to reuse cuda tensor for buffers: {_bkey}"
+                    )
+
+                    module._buffers[buffer_name] = _get_item_from_cpu_cache(
+                        cpu_version_items, _bkey).to(
+                            device,
+                            non_blocking=non_blocking,
+                            copy=True,
+                        )
+                else:
+                    module._buffers[buffer_name] = _cuda_cache_unit[_bkey].copy_(
+                        _get_item_from_cpu_cache(
+                            cpu_version_items, _bkey), non_blocking=non_blocking
+                    )
+                    assert (
+                        str(module._buffers[buffer_name].device) != "cpu"
+                    ), "the buffers should be on cuda device after invoking _apply_cuda()"
+
+        for module_name, module in self.named_modules():
+            _apply_cuda(module_name, module, self._gl_cpu_version_items)
+
+        # for key, value in self._gl_cpu_version_items.items():
+        #     print(f" -- debug: _gl_cpu_version_items after apply_cuda: {key}, {value.device}")
+
+        pass
+
+    def named_children(self) -> Iterator[Tuple[str, "Module"]]:
+        memo = set()
+        for name, module in self._modules.items():
+            if "_gl_" in name:
+                continue
+
+            if module is not None and module not in memo:
+                memo.add(module)
+                yield name, module
+
+    def named_modules(
+        self,
+        memo: Optional[Set["Module"]] = None,
+        prefix: str = "",
+        remove_duplicate: bool = True,
+    ):
+        if memo is None:
+            memo = set()
+        if self not in memo:
+            if remove_duplicate:
+                memo.add(self)
+            yield prefix, self
+
+            for name, module in self._modules.items():
+                if module is None:
+                    continue
+                if "_gl_" in name:
+                    continue
+                submodule_prefix = prefix + ("." if prefix else "") + name
+                for m in module.named_modules(memo, submodule_prefix, remove_duplicate):
+                    if "_gl_" in m[0]:
+                        continue
+                    else:
+                        yield m
+
+
+# -------------------------------------------------------------------------------

@@ -57,6 +57,1279 @@ def print_datetime(string):
     time_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     print_rank_0('[' + string + '] datetime: {} '.format(time_str))
 
+# ---- gl version ----
+from megatron import set_global_variables
+
+torch.cuda.empty_cache() 
+# =======================
+# === for GL version ====
+# =======================
+import asyncio
+from collections import OrderedDict, deque
+from megatron.arguments import parse_args
+from megatron.utils import _is_cpu
+from megatron.utils import gl_warmup_print
+from megatron.utils import get_parameters_in_billions, _unwrap_model
+
+#import ray
+#import ray.workers.setup_worker
+from concurrent.futures import ThreadPoolExecutor
+ray_get = lambda futs: [fut.result() for fut in futs]
+
+import random
+import json
+
+# ray.init()
+# ray.init(num_gpus=8, num_cpus=86,
+#        namespace='offloading', ignore_reinit_error=True,
+#        _system_config={
+#            'worker_lease_timeout_milliseconds': 0,
+#            'max_io_workers': 86,
+#            'object_timeout_milliseconds': 1, })
+#ray.init(
+#    ignore_reinit_error=True,
+#    _system_config={
+#        "max_io_workers": 8,  # More IO workers for local storage. Each IO worker tries using a different directories.
+#        "object_spilling_config": json.dumps(
+#            {
+#              "type": "filesystem",
+#              "params": {
+#                # Each directory could mount at different devices.
+#                "directory_path": [
+#                  "/tmp/ray_ssd/spill_1",
+#                  "/tmp/ray_ssd/spill_2",
+#                  "/tmp/ray_ssd/spill_3",
+#                  "/tmp/ray_ssd/spill_4",
+#                  "/tmp/ray_ssd/spill_5",
+#                  "/tmp/ray_ssd/spill_6",
+#                  "/tmp/ray_ssd/spill_7",
+#                  "/tmp/ray_ssd/spill_8",]}},
+#        )
+#    },
+#)
+
+
+def _free_cuda_tensor(tensor):
+    if tensor.storage().size() > 0:
+        assert tensor.storage_offset() == 0, "The tensor should have sole storage"
+        tensor.storage().resize_(0)
+
+
+# =====================================================
+# === four kinds of hooks for forward and backward  ===
+# =====================================================
+def _append_loading_futs(_layer, futs, fwd=True):
+    if fwd:
+        if hasattr(_layer, "_gl_futs_loading_at_fwd"):
+            _layer._gl_futs_loading_at_fwd += futs
+        else:
+            _layer._gl_futs_loading_at_fwd = futs
+    else:
+        if hasattr(_layer, "_gl_futs_loading_at_bwd"):
+            _layer._gl_futs_loading_at_bwd += futs
+        else:
+            _layer._gl_futs_loading_at_bwd = futs
+
+
+def _append_offloading_futs(_layer, futs, fwd=True):
+    if fwd:
+        if hasattr(_layer, "_gl_futs_offloading_at_fwd"):
+            _layer._gl_futs_offloading_at_fwd += futs
+        else:
+            _layer._gl_futs_offloading_at_fwd = futs
+    else:
+        if hasattr(_layer, "_gl_futs_offloading_at_bwd"):
+            _layer._gl_futs_offloading_at_bwd += futs
+        else:
+            _layer._gl_futs_offloading_at_bwd = futs
+
+
+def _layer_waiting_futs(_layer, timers):
+    timers("offloading-fwd-overhead").start()
+
+    if hasattr(_layer, "_gl_futs_loading_at_fwd"):
+        timers("offloading-fwd-2gpu-overhead").start()
+        ray_get(_layer._gl_futs_loading_at_fwd)
+        del _layer._gl_futs_loading_at_fwd
+        timers("offloading-fwd-2gpu-overhead").stop()
+
+    if hasattr(_layer, "_gl_futs_offloading_at_fwd"):
+        timers("offloading-fwd-2cpu-overhead").start()
+        ray_get(_layer._gl_futs_offloading_at_fwd)
+        del _layer._gl_futs_offloading_at_fwd
+        timers("offloading-fwd-2cpu-overhead").stop()
+
+    timers("offloading-fwd-overhead").stop()
+
+    timers("offloading-bwd-overhead").start()
+
+    if hasattr(_layer, "_gl_futs_loading_at_bwd"):
+        timers("offloading-bwd-2gpu-overhead").start()
+        ray_get(_layer._gl_futs_loading_at_bwd)
+        del _layer._gl_futs_loading_at_bwd
+        timers("offloading-bwd-2gpu-overhead").stop()
+
+    if hasattr(_layer, "_gl_futs_offloading_at_bwd"):
+        timers("offloading-bwd-2cpu-overhead").start()
+        ray_get(_layer._gl_futs_offloading_at_bwd)
+        del _layer._gl_futs_offloading_at_bwd
+        timers("offloading-bwd-2cpu-overhead").stop()
+
+    # if _layer._gl_is_at_first_window:
+    _layer._gl_save_for_backward.clear()
+
+    timers("offloading-bwd-overhead").stop()
+
+
+def _forward_pre_hook(module, input):
+    if not torch._gl_is_forward_now:
+        return
+
+    timers = get_timers()
+
+    _current_layer = module
+    _handler = _current_layer._gl_handler
+    _layers = _current_layer._gl_layers
+
+    _layer_waiting_futs(_current_layer, timers)
+    timers("offloading-func-call-overhead").start()
+    gl_warmup_print(
+        f"--- at _forward_pre_hook ...... layer={_current_layer._gl_layer_num}"
+    )
+
+    # hard code, assume that no accumulated gradients firstly.
+    # todo. @gl
+    # for debugging
+    for param in _current_layer.parameters():
+        param.grad = None
+
+    _current_layer._gl_save_for_backward.clear()
+
+    # to store save_for_backward tensor with torch.autograd.graph.saved_tensors_hooks
+    torch._gl_current_layer = _current_layer
+
+    """
+    # todo, @gl. now resides at gpu all the time
+    # the first window_size layers:
+    if _current_layer._gl_is_at_first_window:
+        _futs_main_grads = [
+                _handler._layer_move_main_grads_to.remote(_current_layer._gl_layer_num, 'cpu')]
+        _which_layer_to_cuda = _current_layer._gl_which_layer_to_cuda_pre_fwd
+        _append_offloading_futs(_layers[_which_layer_to_cuda], _futs_main_grads)
+    """
+
+    # loading _which_layer_to_cuda_pre_fwd
+    if (
+        not _current_layer._gl_is_at_last_window
+        and _current_layer._gl_which_layer_to_cuda_pre_fwd_required
+    ):
+        _which_layer_to_cuda = _current_layer._gl_which_layer_to_cuda_pre_fwd
+
+        if torch._gl_in_warmup:
+            s = time.time()
+
+        futs = [_handler._layer_to_cuda_remote(_which_layer_to_cuda)]
+        _append_loading_futs(_layers[_which_layer_to_cuda], futs)
+
+        if torch._gl_in_warmup:
+            e1 = time.time()
+            ray_get(futs)
+            e2 = time.time()
+
+            info = f" \n\t layer{_current_layer._gl_layer_num}. _gl_cpu_version_items"
+            for key, value in _current_layer._gl_cpu_version_items.items():
+                info += f"\n\t {key}: {value.device}"
+
+            gl_warmup_print(
+                f"--debug-info = _forward_pre_hook: moving layer-{_which_layer_to_cuda} to cuda, ",
+                f"triggered by {_current_layer._gl_layer_num}",
+                "; \n\t async function call: ",
+                e1 - s,
+                "; \n\t synchronizing: ",
+                e2 - s,
+                info,
+            )
+
+    timers("offloading-func-call-overhead").stop()
+
+
+def _forward_post_hook(module, input, output):
+    if not torch._gl_is_forward_now:
+        return
+
+    timers = get_timers()
+    timers("offloading-func-call-overhead").start()
+
+    _current_layer = module
+    _handler = _current_layer._gl_handler
+    _layers = _current_layer._gl_layers
+
+    gl_warmup_print(
+        f"--- at _forward_post_hook ...... layer={_current_layer._gl_layer_num}"
+    )
+    # print(f'--- at _forward_post_hook ...... layer={_current_layer._gl_layer_num}')
+
+    # for param in _current_layer.parameters():
+    #     param.grad = None
+    #     print("--debug: param.grad at fwd_post_hook:", param.grad)
+
+    # for torch.autograd.graph.saved_tensors_hooks
+    if _current_layer._gl_layer_num == _current_layer._gl_window_size - 1:
+        del torch._gl_current_layer
+
+    if (
+        not _current_layer._gl_is_at_last_window
+        and _current_layer._gl_which_layer_to_cpu_post_fwd_required
+    ):
+        _which_layer_to_cpu = _current_layer._gl_which_layer_to_cpu_post_fwd
+
+        if torch._gl_in_warmup:
+            s = time.time()
+
+        futs = [_handler._layer_to_cpu_remote(_which_layer_to_cpu)]
+
+        futs += [
+            _handler._layer_move_save_for_backward_to_remote(
+                _which_layer_to_cpu, "cpu", 'g2c', i
+            )
+            for i in range(len(_current_layer._gl_save_for_backward))
+        ]
+
+        _which_layer_to_cuda = _current_layer._gl_which_layer_to_cuda_pre_fwd
+        _append_offloading_futs(_layers[_which_layer_to_cuda], futs)
+
+        if torch._gl_in_warmup:
+            e1 = time.time()
+            ray_get(futs)
+            e2 = time.time()
+
+            info = f" \n\t layer{_current_layer._gl_layer_num}. _gl_cpu_version_items"
+            for key, value in _current_layer._gl_cpu_version_items.items():
+                info += f"\n\t {key}: {value.device}"
+
+            gl_warmup_print(
+                f"--debug-info = _forward_post_hook: ",
+                f"moving layer-{_which_layer_to_cpu} to cpu, ",
+                f"triggered by {_current_layer._gl_layer_num}",
+                "; \n\t async function call: ",
+                e1 - s,
+                "; \n\t synchronizing: ",
+                e2 - s,
+                info,
+            )
+
+    timers("offloading-func-call-overhead").stop()
+
+
+def _backward_pre_hook(module, grad_in, grad_out):
+    if not torch._gl_is_backward_now:
+        return
+
+    timers = get_timers()
+
+    _current_layer = module
+    _handler = _current_layer._gl_handler
+    _layers = _current_layer._gl_layers
+
+    _layer_waiting_futs(_current_layer, timers)
+    timers("offloading-func-call-overhead").start()
+    gl_warmup_print(
+        f"--- at _backward_pre_hook ...... layer={_current_layer._gl_layer_num}"
+    )
+    # print(f'--- at _backward_pre_hook ...... layer={_current_layer._gl_layer_num}')
+
+    if (
+        not _current_layer._gl_is_at_first_window
+        and _current_layer._gl_which_layer_to_cuda_pre_bwd_required
+    ):
+        _which_layer_to_cuda = _current_layer._gl_which_layer_to_cuda_pre_bwd
+
+        if torch._gl_in_warmup:
+            s = time.time()
+
+        futs = [_handler._layer_to_cuda_remote(_which_layer_to_cuda)]
+
+        futs += [
+            _handler._layer_move_save_for_backward_to_remote(
+                _which_layer_to_cuda, _layers[_which_layer_to_cuda]._gl_cuda_device, 'c2g', i
+            )
+            for i in reversed(
+                range(len(_layers[_which_layer_to_cuda]._gl_save_for_backward))
+            )
+        ]
+
+        # for checkpoint
+        checkpoint_chunk_size = _current_layer._gl_checkpoint_chunk_size
+        first_layer_in_chunk = (
+            _which_layer_to_cuda // checkpoint_chunk_size * checkpoint_chunk_size
+        )
+        last_layer_in_chunk = min(
+            first_layer_in_chunk + checkpoint_chunk_size - 1, len(_layers) - 1
+        )
+        _append_loading_futs(_layers[last_layer_in_chunk], futs, fwd=False)
+
+        """
+        # todo. @gl. now resides at gpu all the time
+        if _layers[_which_layer_to_cuda]._gl_is_at_first_window:
+            # todo. @gl !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            # if opt.step() at this end of the iteration.
+            #    loading main_grads to cuda
+            # else:
+            #.   keeping main_grads at cpu_cache
+            _futs_layer +=[
+                    _handler._layer_move_main_grads_to.remote(_which_layer_to_cuda, 
+                        _layers[_which_layer_to_cuda]._gl_cuda_device, )]
+        """
+
+        # !!! attention, please !!!
+        # why +1 herein?
+        #   unpacking save_for_backward tensors in ahead of backward_pre_hook
+        _append_loading_futs(_layers[_which_layer_to_cuda + 1], futs, fwd=False)
+
+        if torch._gl_in_warmup:
+            e1 = time.time()
+            ray_get(futs)
+            e2 = time.time()
+
+            info = f" \n\t layer{_current_layer._gl_layer_num}. _gl_cpu_version_items"
+            for key, value in _current_layer._gl_cpu_version_items.items():
+                info += f"\n\t {key}: {value.device}"
+
+            gl_warmup_print(
+                f"--debug-info = _backward_pre_hook: ",
+                f"moving layer-{_which_layer_to_cuda} to cuda, ",
+                f"triggered by {_current_layer._gl_layer_num}",
+                "; \n\t async function call: ",
+                e1 - s,
+                "; \n\t synchronizing: ",
+                e2 - s,
+                info,
+            )
+
+    timers("offloading-func-call-overhead").stop()
+
+
+# todo @gl.........................
+#
+# register the hook at the front of the layer.
+#   for instance, the hook of layer-5 registered at layer-4
+#   because no pure bwd hook api after the full execution of backward
+#
+#   registering into forward_pre_hook and forward_hook can deal with it,
+#   but shows ....
+def _backward_post_hook(module, grad_in, grad_out):
+    if not torch._gl_is_backward_now:
+        return
+
+    timers = get_timers()
+    timers("offloading-func-call-overhead").start()
+
+    _current_layer = module
+    _handler = _current_layer._gl_handler
+    _layers = _current_layer._gl_layers
+    # redirect to the behind of the layer for backward_post hook
+    _current_layer = _layers[_current_layer._gl_layer_num + 1]
+
+    gl_warmup_print(
+        f"--- at _backward_post_hook ...... layer={_current_layer._gl_layer_num} \n"
+    )
+
+    # for _n, _p in _current_layer.named_parameters():
+    #     if _p.grad is not None:
+    #         print('before invoking cpu()', _n, _p.device, _p.grad.device)
+    #     else:
+    #         print('before invoking cpu()', _n, _p.device)
+
+    # _current_layer.cpu()
+
+    # for _n, _p in _current_layer.named_parameters():
+    #     if _p.grad is not None:
+    #         print('after', _n, _p.device, _p.grad.device)
+    #     else:
+    #         print('after',_n, _p.device)
+
+    if (
+        not _current_layer._gl_is_at_first_window
+        and _current_layer._gl_which_layer_to_cpu_post_bwd_required
+    ):
+        _which_layer_to_cpu = _current_layer._gl_which_layer_to_cpu_post_bwd
+
+        if torch._gl_in_warmup:
+            s = time.time()
+
+        futs = [
+            _handler._layer_to_cpu_and_gather_grads_and_optimizer_update_remote(
+                _which_layer_to_cpu
+            )
+        ]
+
+        futs += [_handler._layer_reset_save_for_backward_remote(_which_layer_to_cpu)]
+
+        _which_layer_to_cuda = _current_layer._gl_which_layer_to_cuda_pre_bwd
+        _append_offloading_futs(_layers[_which_layer_to_cuda], futs, fwd=False)
+
+        if torch._gl_in_warmup:
+            e1 = time.time()
+            ray_get(futs)
+            e2 = time.time()
+
+            info = f" \n\t layer{_current_layer._gl_layer_num}. _gl_cpu_version_items"
+            for key, value in _current_layer._gl_cpu_version_items.items():
+                info += f"\n\t {key}: {value.device}"
+
+            gl_warmup_print(
+                f"--debug-info = _backward_post_hook: ",
+                f"moving & updating layer-{_which_layer_to_cpu} to cpu, ",
+                f"triggered by {_current_layer._gl_layer_num}",
+                "; \n\t async function call: ",
+                e1 - s,
+                "; \n\t synchronizing: ",
+                e2 - s,
+                info,
+            )
+
+    elif _current_layer._gl_is_at_first_window and _current_layer._gl_layer_num != 0:
+        if torch._gl_in_warmup:
+            s = time.time()
+
+        # only offloading main_grads
+        # todo, @gl
+        # futs = [
+        #         _handler._layer_gather_grads_and_optimizer_update_and_offloading_grads.remote(
+        #             _current_layer._gl_layer_num)]
+        futs = [
+            _handler._layer_gather_grads_and_optimizer_update_remote(
+                _current_layer._gl_layer_num
+            )
+        ]
+        _append_offloading_futs(_current_layer, futs, fwd=False)
+
+        if torch._gl_in_warmup:
+            e1 = time.time()
+            ray_get(futs)
+            e2 = time.time()
+            gl_warmup_print(
+                f"--debug-info = _backward_post_hook: ",
+                f"updating layer-{_current_layer._gl_layer_num}, ",
+                f"triggered by {module._gl_layer_num}",
+                "; \n\t async function call: ",
+                e1 - s,
+                "; \n\t synchronizing: ",
+                e2 - s,
+            )
+
+    else:  # layer-0
+        pass
+
+    timers("offloading-func-call-overhead").stop()
+
+
+# =====================================================
+# ===                 hooks ending                  ===
+# =====================================================
+
+class MockTensor:
+    def __init__(self, tensor, loc):
+        self.device = tensor.device
+        self.loc = loc
+
+def _get_item_from_cpu_cache(_cpu_cache, key, value=None):
+    if key in _cpu_cache and _cpu_cache[key] is not None:
+        ## ----- nvme -----
+        #if isinstance(_cpu_cache[key], MockTensor):
+        #    #import offloading_utils
+        #    #_mock_tensor = _cpu_cache[key]
+        #    #_cpu_cache[key] = offloading_utils.load(_cpu_cache[key].loc)[0]
+        #    #_cpu_cache[key].mock_tensor = _mock_tensor
+
+        #    _cpu_cache[key] = ray.get(_cpu_cache[key].loc)
+        ## ----------------
+        return _cpu_cache[key]
+
+    _cpu_cache[key] = torch.zeros(
+        value.size(),
+        dtype=value.dtype,
+        layout=value.layout,
+        device=torch.device("cpu"),
+        pin_memory=True,  # (torch.cuda.is_available() and not value.is_sparse)
+    ).to("cpu", non_blocking=True)
+    return _cpu_cache[key]
+
+def _move_item_to_nvme(_cpu_cache, key, value=None):
+    if key in _cpu_cache and _cpu_cache[key] is not None:
+        ## ----- nvme -----
+        #if not isinstance(_cpu_cache[key], MockTensor): 
+        #    #import offloading_utils
+        #    if hasattr(_cpu_cache[key], 'mock_tensor'):
+        #        #mock_tensor = _cpu_cache[key].mock_tensor
+        #        #del _cpu_cache[key].mock_tensor
+        #        #offloading_utils.save([_cpu_cache[key]], mock_tensor.loc)
+        #        #_cpu_cache[key] = mock_tensor
+        #        
+        #        r = ray.put(_cpu_cache[key])
+        #        mock_tensor = MockTensor(_cpu_cache[key], r)
+        #        _cpu_cache[key] = mock_tensor
+        #    else:
+        #        #saved_name = '/tmp/' + str(id(_cpu_cache[key])) + str(random.random()) + '.pt'
+        #        #mock_tensor = MockTensor(_cpu_cache[key], saved_name)
+        #        #offloading_utils.save([_cpu_cache[key]], saved_name)
+        #        #_cpu_cache[key] = mock_tensor
+        #        
+        #        r = ray.put(_cpu_cache[key])
+        #        mock_tensor = MockTensor(_cpu_cache[key], r)
+        #        _cpu_cache[key] = mock_tensor
+        ## ----------------
+        pass 
+
+    return
+
+
+#@ray.remote
+class GL_PretrainHanlder:
+    def __init__(
+        self,
+        args,
+        train_valid_test_dataset_provider,
+        model_provider,
+        model_type,
+        forward_step_func,
+        extra_args_provider=None,
+        args_defaults={},
+    ):
+        from megatron.initialize import initialize_megatron
+        from megatron.training import setup_model_and_optimizer
+        from megatron.training import train
+        from megatron.training import save_checkpoint
+        from megatron.training import evaluate_and_print_results
+        from megatron import get_args, set_args
+        from megatron import get_timers
+        from megatron import print_rank_0
+        from collections import OrderedDict, deque
+        from megatron.utils import get_parameters_in_billions, _unwrap_model
+
+        import time
+
+        # setting log file, in case of unkown hangs in Alibaba PAI platform
+        import sys, os
+        if 'LOG_FILE' in os.environ:
+            f = open(os.environ['LOG_FILE'], 'at')
+            sys.stdout = f
+
+        # setting save_for_backward wrapper
+        from megatron.utils import saved_tensors_wrapper
+        from megatron.utils import save_for_backward_wrapper
+
+        # """
+        # setting save_for_backward hooks
+        # """
+        # torch.autograd.function.FunctionCtx.save_for_backward = (
+        #     save_for_backward_wrapper(
+        #         torch.autograd.function.FunctionCtx.save_for_backward
+        #     )
+        # )
+        # torch.autograd.function.FunctionCtx.saved_tensors = property(
+        #     saved_tensors_wrapper(torch.autograd.function.FunctionCtx.saved_tensors)
+        # )
+        # """
+
+        # redefine setting synchronize
+        def _func():
+            torch.cuda.current_stream().synchronize()
+
+        torch.cuda.synchronize = _func
+
+        # ? no influence
+        # torch.__future__.set_overwrite_module_params_on_conversion(False)
+
+        set_args(args)
+        # Initalize and get arguments, timers, and Tensorboard writer.
+        initialize_megatron(
+            extra_args_provider=extra_args_provider,
+            args_defaults=args_defaults,
+            ignore_unknown_args=True,
+        )
+
+        assert (
+            args.num_layers % args.activations_checkpoint_num_layers == 0
+        ), "the number of layers should be divided by activations_checkpoint_num_layers"
+
+        timers = get_timers()
+
+        self.args = args
+        self.num_layers = args.num_layers
+        self.gl_window_size = args.gl_window_size
+        self.gl_debug_print = args.gl_debug_print
+        self.timers = timers
+
+        self.executor = ThreadPoolExecutor(max_workers=args.gl_ray_max_concurrency)
+
+        # Adjust the startup time so it reflects the largest value.
+        # This will be closer to what scheduler will see (outside of
+        # image ... launches.
+        global _TRAIN_START_TIME
+        start_time_tensor = torch.cuda.DoubleTensor([_TRAIN_START_TIME])
+        torch.distributed.all_reduce(
+            start_time_tensor, op=torch.distributed.ReduceOp.MIN
+        )
+        _TRAIN_START_TIME = start_time_tensor.item()
+        print_rank_0(
+            "time to initialize megatron (seconds): {:.3f}".format(
+                time.time() - _TRAIN_START_TIME
+            )
+        )
+        print_datetime("after megatron is initialized")
+
+        timers("model-and-optimizer-setup").start()
+        model, optimizer, lr_scheduler = setup_model_and_optimizer(
+            model_provider, model_type
+        )
+        timers("model-and-optimizer-setup").stop()
+        print_datetime(
+            "after model, optimizer, and learning rate " "scheduler are built"
+        )
+
+        self.model, self.optimizer, self.lr_scheduler = model, optimizer, lr_scheduler
+        self._language_model = None
+
+        # Data stuff.
+        timers("train/valid/test-data-iterators-setup").start()
+        if args.virtual_pipeline_model_parallel_size is not None:
+            all_data_iterators = [
+                build_train_valid_test_data_iterators(train_valid_test_dataset_provider)
+                for _ in range(len(model))
+            ]
+            train_data_iterator = [
+                data_iterators[0] for data_iterators in all_data_iterators
+            ]
+            valid_data_iterator = [
+                data_iterators[1] for data_iterators in all_data_iterators
+            ]
+            test_data_iterator = [
+                data_iterators[2] for data_iterators in all_data_iterators
+            ]
+        else:
+            (
+                train_data_iterator,
+                valid_data_iterator,
+                test_data_iterator,
+            ) = build_train_valid_test_data_iterators(train_valid_test_dataset_provider)
+        timers("train/valid/test-data-iterators-setup").stop()
+        print_datetime("after dataloaders are built")
+
+        self.train_data_iterator, self.valid_data_iterator, self.test_data_iterator = (
+            train_data_iterator,
+            valid_data_iterator,
+            test_data_iterator,
+        )
+
+        self.forward_step_func = forward_step_func
+
+        # Print setup timing.
+        print_rank_0("done with setup ...")
+        timers.log(
+            ["model-and-optimizer-setup", "train/valid/test-data-iterators-setup"]
+        )
+        print_rank_0("training ...")
+
+    def process(self):
+        args = self.args
+        forward_step_func = self.forward_step_func
+        model, optimizer, lr_scheduler = self.model, self.optimizer, self.lr_scheduler
+        train_data_iterator, valid_data_iterator, test_data_iterator = (
+            self.train_data_iterator,
+            self.valid_data_iterator,
+            self.test_data_iterator,
+        )
+
+        iteration = 0
+
+        def pack_for_bwk(tensor):
+            packed = [tensor.device, tensor]
+            timers = get_timers()
+            timers("offloading-func-call-overhead").start()
+            if hasattr(torch, "_gl_current_layer") and torch._gl_transformer_fwd:
+
+                # avoid the tensors in the pooling layers are saved into the last transfromer layer
+                # todo. @gl.
+                #if len(torch._gl_current_layer._gl_save_for_backward) >= 4: 
+                #    return packed
+
+                torch._gl_current_layer._gl_save_for_backward.append(packed)
+                print(f'layer = {torch._gl_current_layer._gl_layer_num}, {len(torch._gl_current_layer._gl_save_for_backward)}')
+
+                gl_warmup_print(
+                    f"---- pack save_for_backward - layer={torch._gl_current_layer._gl_layer_num}",
+                    f";\n\t id_packed={id(packed)}; len={len(torch._gl_current_layer._gl_save_for_backward)};",
+                    f";\n\t device={tensor.device}, size={tensor.size()}, id={id(tensor)}",
+                )
+
+            timers("offloading-func-call-overhead").stop()
+            return packed
+
+        def unpack_on_bwk(packed):
+            device, tensor = packed
+            # print(f'----unpack save_for_backward - id={id(packed)}, device={tensor.device}, {id(tensor)}')
+            assert str(tensor.device) == str(
+                device
+            ), "---- error: unpack_on_bwk, should be loaded to GPU ---"
+            return tensor
+
+            # if str(tensor.device) != str(device):
+            #    timers = get_timers()
+            #    timers('offloading-bwd-overhead').start()
+            #    timers('offloading-bwd-sfb-overhead').start()
+            #
+            #    print(f'---- error: unpack save_for_backward ',
+            #            f';\n\t - id_packed={id(packed)}, device={tensor.device}, id={id(tensor)}', flush=True)
+            #    cuda_tensor = tensor.to(device, non_blocking=True)
+
+            #    timers('offloading-bwd-sfb-overhead').stop()
+            #    timers('offloading-bwd-overhead').stop()
+            #    return cuda_tensor
+            # else:
+            #    return tensor
+
+        torch._gl_transformer_fwd = False
+        #with torch.autograd.graph.saved_tensors_hooks(pack_for_bwk, unpack_on_bwk):
+        #with torch.autograd.graph.save_on_cpu(pin_memory=True):
+        if args.do_train and args.train_iters > 0:
+            with torch.cuda.stream(torch.cuda.Stream()):
+                iteration = train(
+                    forward_step_func,
+                    model,
+                    optimizer,
+                    lr_scheduler,
+                    train_data_iterator,
+                    valid_data_iterator,
+                )
+        print_datetime("after training is done")
+        #import os
+        #os._exit(0)
+        #return 0
+
+        # refine later
+        if False and args.do_valid:
+            prefix = "the end of training for val data"
+            evaluate_and_print_results(
+                prefix, forward_step_func, valid_data_iterator, model, iteration, False
+            )
+
+        if False and args.save and iteration != 0:
+            save_checkpoint(iteration, model, optimizer, lr_scheduler)
+
+        if False and args.do_test:
+            # Run on test data.
+            prefix = "the end of training for test data"
+            evaluate_and_print_results(
+                prefix, forward_step_func, test_data_iterator, model, 0, True
+            )
+
+    def print_model(self):
+        print(self.model)
+        # print(self.model[0].module.module.language_model.encoder)
+
+    # =====================================================
+    # == basic actions for hooks of forward and backward ==
+    # =====================================================
+    def _layer_to_cuda_remote(self, *args, **kwargs):
+        return self.executor.submit(self._layer_to_cuda, *args, **kwargs)
+
+    def _layer_to_cpu_remote(self, *args, **kwargs):
+        return self.executor.submit(self._layer_to_cpu, *args, **kwargs)
+
+    def _layer_move_save_for_backward_to_remote(self, *args, **kwargs):
+        return self.executor.submit(self._layer_move_save_for_backward_to, *args, **kwargs)
+
+    def _layer_to_cpu_and_gather_grads_and_optimizer_update_remote(self, *args, **kwargs):
+        return self.executor.submit(self._layer_to_cpu_and_gather_grads_and_optimizer_update, *args, **kwargs)
+
+    def _layer_reset_save_for_backward_remote(self, *args, **kwargs):
+        return self.executor.submit(self._layer_reset_save_for_backward, *args, **kwargs)
+
+    def _layer_gather_grads_and_optimizer_update_remote(self, *args, **kwargs):
+        return self.executor.submit(self._layer_gather_grads_and_optimizer_update, *args, **kwargs)
+
+
+    def _model_to(self, device):
+        _models = self.model if isinstance(self.model, list) else [self.model]
+
+        _stream = torch.cuda.Stream()
+        with torch.cuda.stream(_stream):
+            if _is_cpu(device):
+                for model_module in _models:
+                    model_module.cpu()
+            else:
+                for model_module in _models:
+                    model_module.cuda(device)
+
+            _stream.synchronize()
+
+    def _assert_language_model(self):
+        _models = self.model if isinstance(self.model, list) else [self.model]
+
+        if self._language_model is None:
+            for name, module in _models[0].named_modules():
+                if name.endswith("language_model"):
+                    self._language_model = module
+                    break
+
+        assert (
+            self._language_model is not None
+        ), "--- _assert_language_model training.py --- language_model not found !"
+
+    def _get_layer(self, layer_num):
+        _model = self.model[0] if isinstance(self.model, list) else self.model
+
+        self._assert_language_model()
+
+        _transformer_layers = self._language_model.encoder.layers
+        return _transformer_layers[layer_num]
+
+    def _get_layers(self):
+        self._assert_language_model()
+
+        _transformer_layers = self._language_model.encoder.layers
+        return _transformer_layers
+
+    def _layer_to(self, layer_num, device, non_blocking=True):
+        with torch.no_grad():
+            _layer = self._get_layer(layer_num)
+
+            _stream = torch.cuda.Stream()
+            with torch.cuda.stream(_stream):
+                if _is_cpu(device):
+                    _layer.cpu(non_blocking=non_blocking)
+                else:
+                    _layer.cuda(device, non_blocking=non_blocking)
+
+                _stream.synchronize()
+        pass
+
+    @torch.no_grad()
+    def _layer_to_cuda(self, layer_num):
+        _layer = self._get_layer(layer_num)
+
+        _stream = torch.cuda.Stream()
+        with torch.cuda.stream(_stream):
+            _layer.cuda(torch.cuda.current_device(), non_blocking=True)
+
+            _stream.synchronize()
+        pass
+
+    @torch.no_grad()
+    def _layer_to_cpu(self, layer_num):
+        _layer = self._get_layer(layer_num)
+
+        _stream = torch.cuda.Stream()
+        with torch.cuda.stream(_stream):
+            _layer.cpu(non_blocking=True)
+
+            _stream.synchronize()
+        pass
+
+    def _layer_to_cpu_and_gather_grads(self, layer_num):
+        with torch.no_grad():
+            _layer = self._get_layer(layer_num)
+
+            _stream = torch.cuda.Stream()
+            with torch.cuda.stream(_stream):
+                _layer.cpu(non_blocking=True)
+                _stream.synchronize()
+
+                if _layer._gl_fp16:
+                    for param in _layer.parameters():
+                        if param is None or param.grad is None:
+                            continue
+                        if param.grad.data is not None:
+                            param.main_grad.add_(param.grad.data)
+                            # Now we can deallocate grad memory.
+                            # _free_cuda_tensor(param.grad)
+                            param.grad = None
+
+                    _stream.synchronize()
+        pass
+
+    def _layer_reset_save_for_backward(self, layer_num):
+        _layer = self._get_layer(layer_num)
+        _cpu_cache = _layer._gl_save_for_backward_cpu_cache
+
+        if len(_cpu_cache) > 0:
+            # the layers have cpu cache
+            for i, _packed in enumerate(_layer._gl_save_for_backward):
+                if _packed[1] is None:
+                    continue
+
+                gl_warmup_print(
+                    f"--- reset - save_for_backward: index={i}; layer={layer_num}",
+                    f";\n\t id_packed={id(_packed)}; len(_cpu_cache)={len(_cpu_cache)}",
+                    f";\n\t device={_packed[1].device}; size={_packed[1].size()}; id={id(_packed[1])}; \n",
+                )
+
+                # _packed.pop() # del _packed[1]
+                # _packed.append(_cpu_cache[i] if i in _cpu_cache else None)
+                _packed[1] = _cpu_cache[i] if i in _cpu_cache else None
+
+        # the last last 'window_size' layers have no cpu_cache for save_for_backward tensors
+        _layer._gl_save_for_backward.clear()
+
+        pass
+
+    def _layer_move_save_for_backward_to(
+        self, layer_num, device, action, index, non_blocking=True
+    ):
+        with torch.no_grad():
+            _layer = self._get_layer(layer_num)
+
+            _stream = torch.cuda.Stream()
+            with torch.cuda.stream(_stream):
+                if action == 'g2c':
+                    _save_for_backward = _layer._gl_save_for_backward
+
+                    if len(_save_for_backward) == 0:
+                        # no offloading actions for the first window_size layers
+                        return
+
+                    packed = _save_for_backward[index]
+
+                    tensor_device, tensor = packed
+
+                    if _is_cpu(tensor_device):
+                        # only offloading cuda tensors to cpu.
+                        # no actions for cpu tensors or None type
+                        return
+
+                    _cpu_cache = _layer._gl_save_for_backward_cpu_cache
+
+                    if index not in _cpu_cache:
+                        gl_warmup_print(
+                            f"--- init cpu_cache for save_for_backward tensors ",
+                            f"in layer-{_layer._gl_layer_num}",
+                        )
+                        _cpu_cache[index] = torch.empty(
+                            tensor.size(),
+                            dtype=tensor.dtype,
+                            layout=tensor.layout,
+                            device=torch.device("cpu"),
+                            pin_memory=True,
+                        )  # (torch.cuda.is_available() and not tensor.is_sparse))
+                    else:
+                        gl_warmup_print(
+                            f"--- already allocated cpu_cache for ",
+                            f"save_for_backward tensors in layer-{_layer._gl_layer_num}",
+                        )
+                        pass
+
+                    # _free_cuda_tensor(packed[1])
+                    _cpu_cache[index] = _get_item_from_cpu_cache(_cpu_cache, index).copy_(
+                        tensor, non_blocking=True
+                    )  # non_blocking=non_blocking
+                    packed[1] = _cpu_cache[index]
+
+                    # _free_cuda_tensor
+                    _save_for_backward[index] = [tensor_device, None]
+
+                    _move_item_to_nvme(_cpu_cache, index)
+                    
+                elif action == 'c2g':
+                    _save_for_backward = _layer._gl_save_for_backward
+
+                    if len(_save_for_backward) == 0:
+                        # no offloading actions for the first window_size layers
+                        return
+
+                    packed = _save_for_backward[index]
+
+                    tensor_device, tensor = packed
+
+                    if not _is_cpu(tensor_device):
+                        # only offloading cuda tensors to cpu.
+                        # no actions for cpu tensors or None type
+                        return
+                 
+                    _cpu_cache = _layer._gl_save_for_backward_cpu_cache
+                    
+                    packed[1] = _get_item_from_cpu_cache(_cpu_cache, index).to(
+                        tensor_device, non_blocking=True
+                    )  # non_blocking=non_blocking
+                        
+                    #packed[1] = _cpu_cache[index].to(
+                    #    tensor_device, non_blocking=True
+                    #)  # non_blocking=non_blocking
+                else:
+                    # sometimes, maybe an error
+                    pass
+
+                _stream.synchronize()
+        pass
+
+    def _layer_move_main_grads_to(self, layer_num, device, non_blocking=True):
+        assert (
+            False
+        ), "todo. @gl. now, we put the main_grads of the first window layers at GPU side"
+        pass
+
+    def _layer_move_main_grads_to_cpu(self, layer_num, non_blocking=True):
+        assert (
+            False
+        ), "todo. @gl. now, we put the main_grads of the first window layers at GPU side"
+        pass
+
+    def _layer_move_main_grads_to_cuda(self, layer_num, non_blocking=True):
+        assert (
+            False
+        ), "todo. @gl. now, we put the main_grads of the first window layers at GPU side"
+        pass
+
+    def _layer_optimizer_update(self, layer_num, non_blocking=True):
+        self.optimizer.layer_update(layer_num)
+
+    # backward hook:
+    # for the first window layers but no including layer-0
+    def _layer_gather_grads_and_optimizer_update_and_offloading_grads(
+        self, layer_num, non_blocking=True
+    ):
+        assert (
+            False
+        ), "todo. @gl. now, we put the main_grads of the first window layers at GPU side"
+        _layer = self._get_layer(layer_num)
+
+        _stream = torch.cuda.Stream()
+        with torch.cuda.stream(_stream):
+            if _layer._gl_fp16:
+                for param in _layer.parameters():
+                    if param is None or param.grad is None:
+                        continue
+                    if param.grad.data is not None:
+                        param.main_grad.add_(param.grad.data)
+                        # Now we can deallocate grad memory.
+                        # _free_cuda_tensor(param.grad)
+                        param.grad = None
+                _stream.synchronize()
+
+            self._layer_optimizer_update(layer_num)
+
+            if _layer._gl_fp16:
+                self._layer_move_main_grads_to_cpu(layer_num)
+        pass
+
+    # backward hook:
+    def _layer_gather_grads_and_optimizer_update(self, layer_num, non_blocking=True):
+        _layer = self._get_layer(layer_num)
+
+        _stream = torch.cuda.Stream()
+        with torch.cuda.stream(_stream):
+            if _layer._gl_fp16:
+                for param in _layer.parameters():
+                    if param is None or param.grad is None:
+                        continue
+                    if param.grad.data is not None:
+                        param.main_grad.add_(param.grad.data)
+                        # Now we can deallocate grad memory.
+                        # _free_cuda_tensor(param.grad)
+                        param.grad = None
+                _stream.synchronize()
+
+            self._layer_optimizer_update(layer_num)
+        pass
+
+    # backward hook:
+    # for the layers excluding the first window layers
+    def _layer_to_cpu_and_gather_grads_and_optimizer_update(
+        self, layer_num, non_blocking=True
+    ):
+        self._layer_to_cpu_and_gather_grads(layer_num)
+        # print(f" ---------> {layer_num} _layer_to_cpu_and_gather_grads is done")
+        if hasattr(torch, "_gl_is_last_batch"):
+            self._layer_optimizer_update(layer_num)
+
+    # =====================================================
+    # ==              basic actions ending               ==
+    # =====================================================
+
+    def register_pretrain_handler_for_layers(self, handler):
+        for layer_num in range(self.num_layers):
+            self._get_layer(layer_num)._gl_handler = handler
+
+    def register_gl_properties_for_layers(self):
+        # register offloading order between different layers.
+        _num_layers = self.num_layers
+        _window_size = self.gl_window_size
+        _checkpoint_chunk_size = self.args.activations_checkpoint_num_layers
+
+        for _cur_layer_num in range(_num_layers):
+            _layer = self._get_layer(_cur_layer_num)
+
+            #  cuda device
+            _layer._gl_cuda_device = torch.cuda.current_device()
+
+            # layer number
+            _layer._gl_layer_num = _cur_layer_num
+            _layer._gl_window_size = _window_size
+            _layer._gl_fp16 = self.args.fp16
+
+            # activations-checkpoint-num-layers
+            _layer._gl_checkpoint_chunk_size = _checkpoint_chunk_size
+
+            # record layers
+            _layer._gl_layers = self._get_layers()
+
+            # save_for_backward
+            _layer._gl_save_for_backward = deque()
+            _layer._gl_save_for_backward_cpu_cache = OrderedDict()
+
+            # candidate layer that should be offloaded to GPU
+            #   before the forward process of current layer
+            _which_layer_to_cuda_pre_fwd = min(
+                _cur_layer_num + _window_size, _num_layers - 1
+            )
+            _layer._gl_which_layer_to_cuda_pre_fwd = _which_layer_to_cuda_pre_fwd
+
+            _layer._gl_which_layer_to_cuda_pre_fwd_required = (
+                _cur_layer_num < _num_layers - _window_size
+            )
+
+            # candidate layer that should be offloaded to CPU
+            #   after the forward process of current layer
+            _which_layer_to_cpu_post_fwd = min(
+                _cur_layer_num, _num_layers - _window_size - 1
+            )
+            _layer._gl_which_layer_to_cpu_post_fwd = _which_layer_to_cpu_post_fwd
+
+            _layer._gl_which_layer_to_cpu_post_fwd_required = (
+                _cur_layer_num < _num_layers - _window_size
+            )
+
+            # candidate layer that should be offloaded to GPU
+            #   before the backward process of current layer
+            _which_layer_to_cuda_pre_bwd = max(_cur_layer_num - _window_size, 0)
+            _layer._gl_which_layer_to_cuda_pre_bwd = _which_layer_to_cuda_pre_bwd
+
+            _layer._gl_which_layer_to_cuda_pre_bwd_required = (
+                _cur_layer_num >= _window_size
+            )
+
+            # candidate layer that should be offloaded to CPU
+            #   after the backward process of current layer
+
+            # _which_layer_to_cpu_pre_bwd = max((_cur_layer_num + 1) % _num_layers, _window_size) \
+            #                         if _cur_layer_num != _num_layers - 1 else 0
+            # _layer._gl_which_layer_to_cpu_pre_bwd = _which_layer_to_cpu_pre_bwd
+
+            # _layer._gl_which_layer_to_cpu_pre_bwd_required = \
+            #     (_cur_layer_num + 1) % _num_layers >= _window_size
+
+            _which_layer_to_cpu_post_bwd = max(_cur_layer_num, _window_size)
+            _layer._gl_which_layer_to_cpu_post_bwd = _which_layer_to_cpu_post_bwd
+
+            _layer._gl_which_layer_to_cpu_post_bwd_required = (
+                _cur_layer_num >= _window_size
+            )
+
+            _layer._gl_is_at_last_window = (
+                not _layer._gl_which_layer_to_cuda_pre_fwd_required
+            )
+            _layer._gl_is_at_first_window = (
+                not _layer._gl_which_layer_to_cpu_post_bwd_required
+            )
+
+            """
+            Example: 12 layers and 4 window_size
+            layer:          00 01 02 03 04 05 06 07 08 09 10 11
+            cuda_pre_fwd:   04 05 06 07 08 09 10 11 11 11 11 11
+                            T  T  T  T  T  T  T  T  F  F  F  F
+            cpu_post_fwd:   00 01 02 03 04 05 06 07 07 07 07 07
+                            T  T  T  T  T  T  T  T  F  F  F  F
+            cuda_pre_bwd:   00 00 00 00 00 01 02 03 04 05 06 07
+                            F  F  F  F  T  T  T  T  T  T  T  T
+            cpu_pre_bwd:    04 04 04 04 05 06 07 08 09 10 11 00
+                            F  F  F  T  T  T  T  T  T  T  T  F
+            cpu_post_bwd:   04 04 04 04 04 05 06 07 08 09 10 11
+                            F  F  F  F  T  T  T  T  T  T  T  T 
+            """
+
+            #print(
+            #    f"--- layer={_cur_layer_num}",
+            #    ";\n\t _is_at_first_window",
+            #    _layer._gl_is_at_first_window,
+            #    "; _is_at_last_window",
+            #    _layer._gl_is_at_last_window,
+            #    ";\n\t _to_cuda_pre_fwd:",
+            #    _which_layer_to_cuda_pre_fwd,
+            #    _layer._gl_which_layer_to_cuda_pre_fwd_required,
+            #    ";\n\t _to_cpu_post_fwd:",
+            #    _which_layer_to_cpu_post_fwd,
+            #    _layer._gl_which_layer_to_cpu_post_fwd_required,
+            #    ";\n\t _to_cuda_pre_bwd:",
+            #    _which_layer_to_cuda_pre_bwd,
+            #    _layer._gl_which_layer_to_cuda_pre_bwd_required,
+            #    ";\n\t _to_cpu_post_bwd:",
+            #    _which_layer_to_cpu_post_bwd,
+            #    _layer._gl_which_layer_to_cpu_post_bwd_required,
+            #)
+
+    def register_hooks(self):
+        _num_layers = self.num_layers
+
+        # register forward and backward hooks
+        for _layer_num in range(_num_layers):
+            _layer = self._get_layer(_layer_num)
+
+            # register forward_pre_hooks
+            _layer.register_forward_pre_hook(_forward_pre_hook)
+
+            # register forward_post_hooks
+            _layer.register_forward_hook(_forward_post_hook)
+
+            # register backward_pre_hooks
+            if _layer_num != _num_layers - 1:
+                _layer.register_full_backward_hook(
+                    _backward_post_hook
+                )  # warning!! for next layer
+            _layer.register_full_backward_hook(_backward_pre_hook)
+
+        pass
+
+    # =====================================================
+    # ===              register ending                  ===
+    # =====================================================
+
+
+def gl_pretrain(
+    train_valid_test_dataset_provider,
+    model_provider,
+    model_type,
+    forward_step_func,
+    extra_args_provider=None,
+    args_defaults={},
+):
+
+    set_global_variables(
+        extra_args_provider=extra_args_provider,
+        args_defaults=args_defaults,
+        ignore_unknown_args=False,
+    )
+
+    args = get_args()
+    timers = get_timers()
+
+    print(f">-- rank={args.rank}; local_rank={args.local_rank};")
+    pretrain_handler = GL_PretrainHanlder(
+        args,
+        train_valid_test_dataset_provider,
+        model_provider,
+        model_type,
+        forward_step_func)
+
+
+    pretrain_handler.register_pretrain_handler_for_layers(pretrain_handler)
+    
+    pretrain_handler.register_gl_properties_for_layers()
+    pretrain_handler.register_hooks()
+
+    pretrain_handler.process()
+    return 0
+
+
 
 def pretrain(train_valid_test_dataset_provider,
              model_provider,
@@ -66,6 +1339,19 @@ def pretrain(train_valid_test_dataset_provider,
              extra_args_provider=None,
              args_defaults={},
              data_post_process=None):
+    # ----------- for gl version ----------
+    args = parse_args()
+    if args.enable_gl:
+        gl_pretrain(
+            train_valid_test_dataset_provider,
+            model_provider,
+            model_type,
+            forward_step_func,
+            extra_args_provider=extra_args_provider,
+            args_defaults=args_defaults,
+        )
+        return 0
+    # -------------------------------------
     """Main training program.
 
     This function will run the followings in the order provided:
